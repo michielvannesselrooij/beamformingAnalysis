@@ -303,9 +303,9 @@ B = reshape(B_ind, [size(scan_plane_x), length(f_ind_c_averaged)]);
 %% Structure output
 
 spectra.B                  = B;
-spectra.f_ind_c_averaged   = f_ind_c_averaged;
-spectra.scan_plane_x       = scan_plane_x;
-spectra.scan_plane_y       = scan_plane_y;
+spectra.f                  = f_ind_c_averaged;
+spectra.scanPlaneX         = scan_plane_x;
+spectra.scanPlaneY         = scan_plane_y;
 
 %% Round up
-fprintf('\nDone. It took %0.0f s \n\n', toc)
+fprintf('\nDone. It took %0.0f seconds \n\n', toc)

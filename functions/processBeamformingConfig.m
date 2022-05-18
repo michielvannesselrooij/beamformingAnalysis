@@ -12,7 +12,9 @@ end
 %% Perform specified action
 
 % Inspect a raw data sample?
-if contains(action, 'inspect', 'IgnoreCase', true)
+if contains(action, 'inspect', 'IgnoreCase', true) &&...
+       contains(action, 'raw', 'IgnoreCase', true)
+   
     [setup, conditions, spectra] = inspectRawSample(setup);
         
 % Batch process raw data?

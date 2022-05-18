@@ -17,16 +17,16 @@ else
 end
 
 % Scan plane information
-if isfield(spectra, 'scan_plane_x')
-    scan_plane_x = spectra.scan_plane_x;
+if isfield(spectra, 'scanPlaneX')
+    scanPlaneX = spectra.scanPlaneX;
 else
-    error('Missing coordinates: spectra.scan_plane_x"');
+    error('Missing coordinates: spectra.scanPlaneX"');
 end
 
-if isfield(spectra, 'scan_plane_y')
-    scan_plane_y = spectra.scan_plane_y;
+if isfield(spectra, 'scanPlaneY')
+    scanPlaneY = spectra.scanPlaneY;
 else
-    error('Missing coordinates: spectra.scan_plane_y"');
+    error('Missing coordinates: spectra.scanPlaneY"');
 end
 
 %% Prepare data to show
@@ -51,7 +51,7 @@ SPL = 10*log10(B_select/p_ref^2);
 figure;
 
 % Show beamforming
-contourf(spectra.scan_plane_x, spectra.scan_plane_y, SPL, 20, 'LineColor', 'none');
+contourf(scanPlaneX, scanPlaneY, SPL, 20, 'LineColor', 'none');
 
 % Show geometry (optional)
 hold on

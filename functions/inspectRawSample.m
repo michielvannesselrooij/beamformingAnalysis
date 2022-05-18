@@ -10,15 +10,20 @@ else
     filePath = [dataFile.folder filesep dataFile.name];
 end
 
+
 %% Settings
 setup.dataPortion = input('Portion of data to use in this check (%): ')/100;
 nPlots = input('Number of frequencies to plot:            ');
 
+
 %% Pass to beamforming
 [setup, conditions, spectra] = runBeamforming(filePath, setup);
 
-%% Determine integration window
-setup = defineIntegrationWindow(setup);
+
+%% Inspect integration window
+setup       = defineIntegrationWindow(setup);
+spectra.SPL = selectIntegrationWindow(setup, conditions, spectra);
+
 
 %% Show detailed output
 
@@ -34,6 +39,15 @@ fShow = round(linspace(setup.fRange(1), setup.fRange(2), nPlots));
 for i=1:nPlots
     showBeamforming(spectra, setup, fShow(i));
 end
+
+% Show final spectrum
+figure;
+plot(spectra.f, spectra.SPL, 'b-', 'LineWidth', 2);
+xlabel('f [Hz]');
+ylabel('SPL [dB]');
+box on;
+set(gca, 'XScale', 'log')
+
 
 %% Store result
 storeResult = input('Save result? (y/n): ','s');
