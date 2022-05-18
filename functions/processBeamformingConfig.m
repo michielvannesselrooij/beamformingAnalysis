@@ -15,10 +15,16 @@ end
 if contains(action, 'inspect', 'IgnoreCase', true) &&...
        contains(action, 'raw', 'IgnoreCase', true)
    
-    [setup, conditions, spectra] = inspectRawSample(setup);
+    [setup, conditions, spectra] = inspectSample(setup, 'raw');
+    
+% Inspect a raw data sample?
+elseif contains(action, 'inspect', 'IgnoreCase', true) &&...
+       contains(action, 'processed', 'IgnoreCase', true)
+   
+    [setup, conditions, spectra] = inspectSample(setup, 'processed');
         
 % Batch process raw data?
-elseif contains(action, 'process', 'IgnoreCase', true)
+elseif contains(action, 'batch', 'IgnoreCase', true)
     
     
 % Convert to database entries?

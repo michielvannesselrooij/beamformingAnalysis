@@ -36,9 +36,9 @@ if ~exist('f_plot', 'var')
 elseif isscalar(f_plot)
     
     % Look up nearest frequency available
-    [~,idx] = min(abs(spectra.f_ind_c_averaged - f_plot));
+    [~,idx] = min(abs(spectra.f - f_plot));
     
-    f_plot_final = spectra.f_ind_c_averaged(idx);
+    f_plot_final = spectra.f(idx);
     B_select = spectra.B(:,:,idx);
     
 else
