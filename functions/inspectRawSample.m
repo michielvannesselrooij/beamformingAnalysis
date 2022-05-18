@@ -12,7 +12,7 @@ end
 
 %% Settings
 setup.dataPortion = input('Portion of data to use in this check (%): ')/100;
-nPlots = input('Number of frequencies to plot: ');
+nPlots = input('Number of frequencies to plot:            ');
 
 %% Pass to beamforming
 [setup, conditions, spectra] = runBeamforming(filePath, setup);

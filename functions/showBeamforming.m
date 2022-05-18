@@ -1,5 +1,5 @@
 function showBeamforming(spectra, setup, f_plot)
-fprintf('\nMaking beamforming plot \n')
+fprintf('Making beamforming plot \n')
 
 %% Check inputs
 

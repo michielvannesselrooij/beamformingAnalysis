@@ -158,7 +158,7 @@ else
 end
 
 %% Environment preparation
-fprintf('Beamforming...\n');    
+fprintf('Extracting data...\n');
 
 % Generate frequency bands
 if length(fRange) == 1
@@ -188,6 +188,8 @@ array_us                = ind_start_chunk :  chunk_length-overlap_chunk_length :
 usable_signal           = [ array_us(1:end-1); array_us(1:end-1)+chunk_length-1 ];
    
 %% Develop CSM
+fprintf('Developing CSM...\n');
+
 % f axis for small chunks
 df_chunk = fs/chunk_length;
 f_chunk  = (0:chunk_length/2-1)*df_chunk;
@@ -242,6 +244,7 @@ scan_plane_y = repmat(flipud(y_steps'),1,length(x_steps));
 scan_plane_z = h.*ones(size(scan_plane_x));
 
 %% Beamforming
+fprintf('Calculating radii...\n');
 
 if flowCorrectedSteeringVector == 1
     
@@ -272,6 +275,8 @@ end
 radius = repmat(radii, [1,1,1]);
 delt   = repmat(delt_all, [1,1,1]);
 
+fprintf('Beamforming...\n');
+
 B_ind  = zeros([numel(scan_plane_x), length(f_ind_c_averaged)]);
 B2_ind = zeros([numel(scan_plane_x), length(f_ind_c_averaged)]);
 bar_bf = waitbar(0, 'CFDBF: Performing beamforming ...');
@@ -297,13 +302,10 @@ B = reshape(B_ind, [size(scan_plane_x), length(f_ind_c_averaged)]);
 
 %% Structure output
 
-spectra.B                          = B;
-spectra.f_ind_c_averaged           = f_ind_c_averaged;
-spectra.scan_plane_x               = scan_plane_x;
-spectra.scan_plane_y               = scan_plane_y;
+spectra.B                  = B;
+spectra.f_ind_c_averaged   = f_ind_c_averaged;
+spectra.scan_plane_x       = scan_plane_x;
+spectra.scan_plane_y       = scan_plane_y;
 
 %% Round up
-
-fprintf('\n')
-toc;
-fprintf('\n\n')
+fprintf('\nDone. It took %0.0f s \n\n', toc)
