@@ -1,16 +1,25 @@
-function spectra = beamforming_SPI(dataFile, conditions, setup)
-% v7.0 - Stripped to beamforming core task (MvN - 2022-05-12)
+function spectra = beamforming(dataFile, conditions, setup)
+% v7.0 - Stripped to beamforming core task
+% MvN, 2022-05-12
 tic;
 
 %% Check inputs
 
 % Frequency range
-if isfield(setup, 'f_select')
-    f_select = setup.f_select;
+if isfield(setup, 'fRange')
+    fRange = setup.fRange;
 else
-    f_select = [500 4000];
+    fRange = [500 4000];
 end
-fprintf('Frequency range: %i - %i Hz \n', f_select(1), f_select(2));
+
+if length(fRange) == 2
+    fprintf('Frequency range: %i - %i Hz \n', fRange(1), fRange(2));
+elseif length(fRange) == 1
+    fprintf('Number of frequency bands: %i', fRange)
+else
+    error('Number of elements in frequency range "f_select" must be 2');
+end
+
 
 % Distance
 if isfield(setup, 'h')
@@ -19,35 +28,41 @@ else
     error('No distance to target specified in input "setup.h"');
 end
 
-% Sampling frequency [Hz]
-if isfield(setup, 'fs')
-    fs = setup.fs;
-else
-    error('No sampling frequency specified in input "setup.fs"');
-end
 
 % Temperature
 if isfield(conditions, 'T')
     T = conditions.T;
 else
-    error('No temperature specified in input "setup.T"');
+    T = h5read(dataFile,'/Conditions/Temperature');
 end
+fprintf('Temperature: %0.1f \n', T);
+
+
+% Speed of sound
+if isfield(conditions, 'c')
+    c = conditions.c;
+else
+    error('No speed of sound specified in "conditions.c"');
+end
+
 
 % Mach number
 if isfield(conditions, 'M_eff')
-    M_eff = conditions_M_eff;
+    M_eff = conditions.M_eff;
 else
     error('No effective Mach number specified in "conditions.M_eff"');
 end
 
+
 % Microphone positions
-if isfield(setup, 'mic_poses')
-    mic_poses = setup.mic_poses;
-    n_mics = size(mic_poses,2);
-    fprintf('Loaded %i microphones \n', n_mics);
+if isfield(setup, 'micPos')
+    micPos = setup.micPos(1:3, :);
+    nMics = size(micPos,2);
+    fprintf('Loaded %i microphones \n', nMics);
 else
     error('No mic positions specified in "setup.mic_poses"');
 end
+
 
 % Indices of mics to be removed
 if isfield(setup, 'brokenMics')
@@ -58,105 +73,116 @@ else
     fprintf('Using all mics \n');
 end
 
+
 % Scan plane limits
-if isfield(setup, 'scan_plane_limits')
-    scan_plane_limits = setup.scan_plane_limits;
+if isfield(setup, 'scanPlaneLimits')
+    scanPlaneLimits = setup.scanPlaneLimits;
 else
     error('No scan plane limits specified in "setup.scan_plane_limits"');
 end
+
 
 % Detailed settings ------------
 fprintf('Detailed settings: \n');
 
     % Time chunk [s]
-    if isfield(setup, 'time_chunk')
-        time_chunk = setup.time_chunk;
+    if isfield(setup, 'timeChunk')
+        timeChunk = setup.timeChunk;
     else
-        time_chunk = 0.1;
+        timeChunk = 0.1;
     end
-    fprintf('    Time chunk: 0.2%f s \n', time_chunk);
+    fprintf('    Time chunk: %0.2f s \n', timeChunk);
 
+    
     % Data overlap in fraction
     if isfield(setup, 'overlap')
         overlap = setup.overlap;
     else
         overlap = 0.5;
     end
-    fprintf('    Data overlap fraction: 0.2%f \n', overlap);
+    fprintf('    Data overlap fraction: %0.2f \n', overlap);
 
+    
     % Resolution [m]
-    if isfield(setup, 'scan_plane_resolution')
-        scan_plane_resolution = setup.scan_plane_resolution;
+    if isfield(setup, 'scanPlaneResolution')
+        scanPlaneResolution = setup.scanPlaneResolution;
     else
-        scan_plane_resolution = 0.01;
+        scanPlaneResolution = 0.01;
     end
-    fprintf('    Scan plane resolution: 0.3%f m \n\n', scan_plane_resolution);
+    fprintf('    Scan plane resolution: %0.2f m \n\n', scanPlaneResolution);
+    
     
     % Diagonal removal of the CSM
-    if isfield(setup, 'diagonal_removal')
-        diagonal_removal = setup.diagonal_removal;
+    if isfield(setup, 'diagonalRemoval')
+        diagonalRemoval = setup.diagonalRemoval;
     else
-        diagonal_removal = 0;
+        diagonalRemoval = 0;
     end
-    fprintf('    Diagonal removal: %i \n', diagonal_removal);
+    fprintf('    Diagonal removal: %i \n', diagonalRemoval);
+    
     
     % Portion of data [%] to be used, centered at the half-time
-    if isfield(setup, 'data_portion')
-        data_portion = setup.data_portion;
+    if isfield(setup, 'dataPortion')
+        dataPortion = setup.dataPortion;
     else
-        data_portion = 1;
+        dataPortion = 1;
     end
-    fprintf('    Portion of data used: %i \n', data_portion*100);
+    fprintf('    Portion of data used: %i \n', dataPortion*100);
         
+    
     % Flow-corrected steering vector
-    if isfield(setup, 'flow_dir_vector')
-        flow_corrected_steering_vector = 1;
-        flow_dir_vector = setup.flow_dir_vector;
+    if isfield(setup, 'flowVector')
+        flowCorrectedSteeringVector = 1;
+        flowVector = setup.flowVector;
         
         fprintf('    Flow-corrected steering vector: \n');   
-        disp(flow_corrected_steering_vector);
+        disp(flowVector);
         
     else
-        flow_corrected_steering_vector = 0;
+        flowCorrectedSteeringVector = 0;
         fprintf('    Flow-corrected steering vector: no \n');   
     end
 fprintf('\n');
 
 %% Load data file
 fprintf('Loading data...\n');
+dataMic       = h5read(dataFile,'/AcousticData/Measurement');
+data          = dataMic(:,1:nMics);
 
-datafileload  = strcat(dataFile.path, dataFile.fileName);
-dataMic       = h5read(datafileload,'/AcousticData/Measurement');
-data          = dataMic(:,1:n_mics);
+% Sampling frequency [Hz]
+if isfield(setup, 'fs')
+    fs = setup.fs;
+    fprintf('Explicitly setting acquisition frequency: %i \n', fs);
+else
+    fs = h5read(dataFile,'/Acquisition/SampleRate');
+end
 
 %% Environment preparation
-fprintf('Beamforming...\n');
+fprintf('Beamforming...\n');    
 
-% Speed of sound [m/s]
-c     = 331.5 + (0.6*T);         
-
-% Generate frequency bands, format f(1,number of bands)
-if length(f_select) == 1
-    f_cen = 10.^(f_select./10);
+% Generate frequency bands
+if length(fRange) == 1
+    f_cen   = 10.^(fRange./10);
     f_upper = 2^(1/6).*f_cen;
     f_lower = f_upper./2^(1/3);
 else
-    f_lower = f_select(1);
-    f_upper = f_select(2);
+    f_lower = fRange(1);
+    f_upper = fRange(2);
 end
 
 % Microphones and data preparation
 data                    = data(...
-                                max(1,round(size(data,1)/2-(0.5*data_portion)*size(data,1))) : ...
-                                round(size(data,1)/2+(0.5*data_portion)*size(data,1)),...
+                                max(1,round(size(data,1)/2 - (0.5*dataPortion)*size(data,1))) : ...
+                                round(size(data,1)/2       + (0.5*dataPortion)*size(data,1)),...
                                 :);
 data(:,removeMics)      = [];
-mic_poses(3,:)          = 0;
-mic_poses(:,removeMics) = [];
+micPos(3,:)             = 0;
+micPos(:,removeMics)    = [];
+nMics = length(micPos);
 
 % Windowing
 ind_start_chunk         = 1;
-chunk_length            = floor( time_chunk*fs );
+chunk_length            = floor( timeChunk*fs );
 overlap_chunk_length    = floor( overlap*chunk_length );
 array_us                = ind_start_chunk :  chunk_length-overlap_chunk_length : size(data,1)-overlap_chunk_length;
 usable_signal           = [ array_us(1:end-1); array_us(1:end-1)+chunk_length-1 ];
@@ -169,7 +195,7 @@ f_chunk  = (0:chunk_length/2-1)*df_chunk;
 % indices of frequency to be taken from fft of small chunks
 ind_f_lower = floor(f_lower.*chunk_length./fs + 1);
 ind_f_upper = floor(f_upper.*chunk_length./fs + 1);
-data_chunk  = zeros(chunk_length,n_mics,size(usable_signal,2));
+data_chunk  = zeros(chunk_length,nMics,size(usable_signal,2));
 
 for k = 1:size(usable_signal,2)
     data_chunk(:,:,k) = data(usable_signal(1,k):usable_signal(2,k),:)...
@@ -189,16 +215,16 @@ X_chunk_hann_collect      = X_chunk_hann;
 X_chunk_ff = permute(sqrt(1/(chunk_length*df_chunk)).*X_chunk_hann_collect(ind_f_lower:ind_f_upper,:,:),[2,3,1]);
 f_ind_c_averaged = f_chunk(ind_f_lower:ind_f_upper);
 
-C_av=zeros(n_mics^2,ind_f_upper-ind_f_lower+1);
+C_av=zeros(nMics^2,ind_f_upper-ind_f_lower+1);
 
 for j = 1:size(X_chunk_ff,3)
     CC=rectpulse(conj(X_chunk_ff(:,:,j)),size(X_chunk_ff,1)).*repmat(X_chunk_ff(:,:,j),[size(X_chunk_ff,1),1]);
     C_av(:,j)=mean(real(CC)-1i*imag(CC),2);
 end
 
-C_averaged=reshape(C_av,[n_mics,n_mics,ind_f_upper-ind_f_lower+1]);
+C_averaged=reshape(C_av,[nMics,nMics,ind_f_upper-ind_f_lower+1]);
 
-if diagonal_removal == 1
+if diagonalRemoval == 1
     for i = 1:size(C_averaged,3)
         C_averaged(:,:,i) = C_averaged(:,:,i) - diag(diag(C_averaged(:,:,i)));
     end
@@ -208,8 +234,8 @@ C_averaged = C_averaged.*df_chunk;
 
 %% Build scan plane
 
-x_steps = scan_plane_limits(1) : scan_plane_resolution : scan_plane_limits(2);
-y_steps = scan_plane_limits(3) : scan_plane_resolution : scan_plane_limits(4);
+x_steps = scanPlaneLimits(1) : scanPlaneResolution : scanPlaneLimits(2);
+y_steps = scanPlaneLimits(3) : scanPlaneResolution : scanPlaneLimits(4);
 
 scan_plane_x = repmat(x_steps,length(y_steps),1); 
 scan_plane_y = repmat(flipud(y_steps'),1,length(x_steps));
@@ -217,27 +243,27 @@ scan_plane_z = h.*ones(size(scan_plane_x));
 
 %% Beamforming
 
-if flow_corrected_steering_vector == 1
+if flowCorrectedSteeringVector == 1
     
     % Steering vector for flow correction
-    M_vec           = M_eff.*flow_dir_vector;
+    M_vec           = M_eff .* flowVector;
     beta_square     = 1-M_eff^2;
     psi_j_vec       = [scan_plane_x(:), scan_plane_y(:), -scan_plane_z(:)];
-    x_n_vec         = mic_poses';
-    r_vec           = repmat(x_n_vec,size(psi_j_vec,1),1)-rectpulse(psi_j_vec,size(x_n_vec,1));
-    radii           = sqrt(sum(r_vec.^2,2));
-    radii           = permute(reshape(radii,[n_mics,size(scan_plane_x)]),[2,3,1]);
+    x_n_vec         = micPos';
+    r_vec           = repmat(x_n_vec, size(psi_j_vec, 1), 1) - rectpulse(psi_j_vec, size(x_n_vec, 1));
+    radii0          = sqrt(sum(r_vec.^2, 2));
     
     M_vec_mat       = repmat(M_vec,size(r_vec,1),1);
-    delt_all_m      = (-dot(M_vec_mat,r_vec,2)+sqrt((dot(M_vec_mat,r_vec,2)).^2+beta_square*radii.^2))./(c*beta_square);
-    delt_all        = permute(reshape(delt_all_m,[n_mics,size(scan_plane_x)]),[2,3,1]);
+    delt_all_m      = (-dot(M_vec_mat,r_vec,2) + sqrt((dot(M_vec_mat,r_vec,2)).^2 + beta_square*radii0.^2)) ./ (c*beta_square);
+    delt_all        = permute(reshape(delt_all_m, [nMics,size(scan_plane_x)]), [2,3,1]);
+    radii           = permute(reshape(radii0, [nMics, size(scan_plane_x)]), [2,3,1]);
 
 else
     
     % Basic steering vector, ignore the flow
-    radii = sqrt((repmat(scan_plane_x,[1,1,n_mics]) - repmat(reshape(mic_poses(1,:),[1,1,n_mics]), [size(scan_plane_x),1])).^2 ...
-               + (repmat(scan_plane_y,[1,1,n_mics]) - repmat(reshape(mic_poses(2,:),[1,1,n_mics]), [size(scan_plane_y),1])).^2 ...
-               + (repmat(scan_plane_z,[1,1,n_mics]) - repmat(reshape(mic_poses(3,:),[1,1,n_mics]), [size(scan_plane_x),1])).^2);
+    radii = sqrt((repmat(scan_plane_x,[1,1,nMics]) - repmat(reshape(micPos(1,:),[1,1,nMics]), [size(scan_plane_x),1])).^2 ...
+               + (repmat(scan_plane_y,[1,1,nMics]) - repmat(reshape(micPos(2,:),[1,1,nMics]), [size(scan_plane_y),1])).^2 ...
+               + (repmat(scan_plane_z,[1,1,nMics]) - repmat(reshape(micPos(3,:),[1,1,nMics]), [size(scan_plane_x),1])).^2);
 
     delt_all = radii./c;
     
@@ -254,7 +280,7 @@ for f_index = 1:length(f_ind_c_averaged)
     waitbar(f_index/length(f_ind_c_averaged));
     
     g     = ((-exp(-2*pi*1i*f_ind_c_averaged(f_index).*delt)) ./ radius);
-    gsel  = reshape(g, [numel(scan_plane_x), length(mic_poses)]);
+    gsel  = reshape(g, [numel(scan_plane_x), nMics]);
     C_ind = C_averaged(:, :, f_index);
     
     for s = 1:size(gsel,1)
@@ -267,7 +293,7 @@ end
 
 close(bar_bf);
 
-B = reshape(B_ind,[size(scan_plane_x),length(f_ind_c_averaged)]);
+B = reshape(B_ind, [size(scan_plane_x), length(f_ind_c_averaged)]);
 
 %% Structure output
 
