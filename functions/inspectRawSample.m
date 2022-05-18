@@ -34,3 +34,30 @@ fShow = round(linspace(setup.fRange(1), setup.fRange(2), nPlots));
 for i=1:nPlots
     showBeamforming(spectra, setup, fShow(i));
 end
+
+%% Store result
+storeResult = input('Save result? (y/n): ','s');
+if strcmp(storeResult, 'y')
+    
+    if isfield(setup, 'name')
+        outputFolder = ['inspect_' setup.name];
+    else
+        outputFolder = 'inspectSample';
+    end
+    fprintf('Storing results in %s\n', outputFolder);
+    mkdir(outputFolder);
+    
+    % Save data
+    save([outputFolder filesep 'sample.mat'], 'conditions', 'setup', 'spectra');
+    
+    % Save all figures
+    figList = handle( sort( double(findall(0, 'type', 'figure') ) ));
+    savefig(figList, [outputFolder filesep 'figures'], 'compact');
+    for i=1:length(figList)
+        set(figList(i),'WindowStyle','normal');
+        set(figList(i), 'Units', 'pixels', 'Position', [10 10 800 600]);
+        saveas(figList(i), [outputFolder filesep 'figure_' num2str(i) '.png']);
+        set(figList(i),'WindowStyle','docked');
+    end
+    
+end
