@@ -26,9 +26,11 @@ elseif contains(action, 'inspect', 'IgnoreCase', true) &&...
 % Batch process raw data?
 elseif contains(action, 'batch', 'IgnoreCase', true)
     
+    [setup, conditions, spectra] = batchBeamforming(setup);
     
 % Convert to database entries?
 elseif contains(action, 'convert', 'IgnoreCase', true)
+    
     % TODO to be completed
     
 else

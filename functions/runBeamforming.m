@@ -1,21 +1,43 @@
-function [setup, conditions, spectra] = runBeamforming(dataFile, setup)
+function [setup, conditions, spectra] = runBeamforming(dataFiles, setup)
 %% Get conditions and specific setup details for file
 % 
 % INPUTS:
-% dataFile              Path to h5 data file
+% dataFile              Path to h5 data file(s)
 % setup.T_source        Source for temperature value
 % setup.Re_source       Source for Reynolds number
 % setup.mu_source       Source for viscosity value
 
-% Name
-seps = strfind(dataFile, filesep);
-idx = seps(end);
-setup.name = dataFile(idx+1:end-3);
+% Select file to extract conditions from & define name
+if ischar(dataFiles)
+    
+    % Single file
+    dataFile1 = dataFiles;
+    [~, nameBase, ~] = fileparts(dataFile1);
+    
+elseif iscell(dataFiles)
+    
+    % Multiple files, extract name base
+    dataFile1 = dataFiles{1};
+    [~, nameBase, ~] = fileparts(dataFile1);
+    
+    if isfield(setup, 'fileGrouper')
+        % Remove file grouper from config name
+        if contains(nameBase, setup.fileGrouper)
+            idx = strfind(nameBase, setup.fileGrouper)-1;
+            nameBase = nameBase(1:idx);
+        end
+    end
+    
+else
+    error('input "dataFiles" should be a string or a set of strings');
+    
+end
+setup.name = nameBase;
 
 % Temperature
 T_default = 20;
 if contains(setup.T_source, 'data', 'IgnoreCase', true)                         % From data file
-    T = h5read(dataFile,'/Conditions/Temperature');
+    T = h5read(dataFile1,'/Conditions/Temperature');
     
 elseif contains(setup.T_source, 'override', 'IgnoreCase', true)                 % Override value
     if isfield(setup, 'T_override')
@@ -43,7 +65,7 @@ conditions.c     = 331.5 + (0.6*conditions.T);
 % Reynolds number
 Re_default = 0;
 if contains(setup.Re_source, 'data', 'IgnoreCase', true)                        % From data file
-    Re = h5read(dataFile,'/Conditions/Reynolds');
+    Re = h5read(dataFile1,'/Conditions/Reynolds');
     
 elseif contains(setup.Re_source, 'override', 'IgnoreCase', true)                % Override value
     if isfield(setup, 'Re_override')
@@ -57,16 +79,16 @@ elseif contains(setup.Re_source, 'override', 'IgnoreCase', true)                
     end
     
 elseif contains(setup.Re_source, 'name', 'IgnoreCase', true)                    % From file name
-    idx = strfind(dataFile, 'Re') + 2;
+    idx = strfind(dataFile1, 'Re') + 2;
     
-    seps = strfind(dataFile, '_');
+    seps = strfind(dataFile1, '_');
     dIdx = 0;
-    if strcmp(dataFile(idx+1), '_')
+    if strcmp(dataFile1(idx+1), '_')
         dIdx = 1;
     end
     next = find(seps > idx+dIdx, 1, 'first');
         
-    Re = 1/10 * 1e6 * str2double(dataFile(idx+dIdx : seps(next)-1));
+    Re = 1/10 * 1e6 * str2double(dataFile1(idx+dIdx : seps(next)-1));
     
     fprintf('Reynolds number extracted from file name: %0.2E \n', Re);
     
@@ -81,7 +103,7 @@ conditions.Re = Re;
 % Viscosity
 mu_default = 1.825e-5;
 if contains(setup.mu_source, 'data', 'IgnoreCase', true)                        % From data file
-    mu = h5read(dataFile,'/Conditions/Viscosity');
+    mu = h5read(dataFile1,'/Conditions/Viscosity');
     
 elseif contains(setup.mu_source, 'override', 'IgnoreCase', true)                % Override value
     if isfield(setup, 'mu_override')
@@ -103,12 +125,12 @@ conditions.mu = mu;
 
 
 % Air density
-dataFields = h5info(dataFile, '/Conditions');
+dataFields = h5info(dataFile1, '/Conditions');
 dataFields = dataFields.Datasets;
 rho = 0;
 for i=1:length(dataFields)
     if strcmp(dataFields(i).Name, 'Density')
-        rho = h5read(dataFile,'/Conditions/Density');
+        rho = h5read(dataFile1,'/Conditions/Density');
     end
 end
 if rho == 0
@@ -124,7 +146,7 @@ if isfield(setup, 'wing')
     % Determine AoA
     AoA_default = 0;
     if contains(setup.AoA_source, 'data', 'IgnoreCase', true)                   % From data file
-        AoA = h5read(dataFile,'/Conditions/AngleOfAttack');
+        AoA = h5read(dataFile1,'/Conditions/AngleOfAttack');
         
     elseif contains(setup.AoA_source, 'override', 'IgnoreCase', true)           % Override value
         if isfield(setup, 'AoA_override')
@@ -138,25 +160,25 @@ if isfield(setup, 'wing')
         end
         
     elseif contains(setup.AoA_source, 'name', 'IgnoreCase', true)               % From file name
-        idx = strfind(dataFile, 'AoA') + 3;
+        idx = strfind(dataFile1, 'AoA') + 3;
         
         dIdx = 0;   % offset between 'AoA' and the value in the name
         C = 1;      % Sign of AoA
-        if strcmp(dataFile(idx+1), 'n')
+        if strcmp(dataFile1(idx+1), 'n')
             C = -1;
             dIdx = 1;
-        elseif strcmp(dataFile(idx+1), 'p')
+        elseif strcmp(dataFile1(idx+1), 'p')
             dIdx = 1;
         end
         
-        if strcmp(dataFile(idx+dIdx+1), '_')
+        if strcmp(dataFile1(idx+dIdx+1), '_')
             dIdx = 2;
         end
         
-        seps = strfind(dataFile, '_');
+        seps = strfind(dataFile1, '_');
         next = find(seps > idx+dIdx, 1, 'first');
         
-        AoA = C * str2double(dataFile(idx+dIdx : seps(next)-1));
+        AoA = C * str2double(dataFile1(idx+dIdx : seps(next)-1));
         
     else                                                                        % Default value
         warning('Using default value for AoA: 0 deg');
@@ -203,4 +225,4 @@ M                = conditions.U / conditions.c;
 conditions.M_eff = M * (setup.h - setup.hShear) / setup.h;
 
 %% Run beamforming
-spectra = beamforming(dataFile, conditions, setup);
+spectra = beamforming(dataFiles, conditions, setup);

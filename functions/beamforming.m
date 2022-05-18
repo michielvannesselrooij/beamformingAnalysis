@@ -1,9 +1,26 @@
-function spectra = beamforming(dataFile, conditions, setup)
-% v7.0 - Stripped to beamforming core task
-% MvN, 2022-05-12
+function spectra = beamforming(dataFiles, conditions, setup)
 tic;
 
 %% Check inputs
+
+% File selection
+if ischar(dataFiles)
+    
+    % Single file
+    dataFile1 = dataFiles;
+    dataFiles = {dataFiles}; % Pack into cell
+    
+elseif iscell(dataFiles)
+    
+    % Multiple files
+    dataFile1 = dataFiles{1};
+    
+else
+    error('input "dataFiles" should be a string or a set of strings');
+    
+end
+
+dataFile=1;
 
 % Frequency range
 if isfield(setup, 'fRange')
@@ -33,7 +50,7 @@ end
 if isfield(conditions, 'T')
     T = conditions.T;
 else
-    T = h5read(dataFile,'/Conditions/Temperature');
+    T = h5read(dataFile1,'/Conditions/Temperature');
 end
 fprintf('Temperature: %0.1f \n', T);
 
@@ -146,7 +163,33 @@ fprintf('\n');
 
 %% Load data file
 fprintf('Loading data...\n');
-dataMic       = h5read(dataFile,'/AcousticData/Measurement');
+
+% Pre-allocate
+N = length(dataFiles);
+dataSize = zeros(N,1);
+micCount = zeros(N,1);
+
+for i=1:N
+    fileInfo = h5info(dataFiles{i},'/AcousticData/Measurement');
+    dataSize(i) = fileInfo.ChunkSize(1);
+    micCount(i) = fileInfo.ChunkSize(2);
+end
+
+if numel(unique(micCount)) > 1
+    error('Number of microphones not consistent between data files in set ');
+end
+
+dataMic = zeros(sum(dataSize), micCount(1));
+
+% Fill data
+IdxSteps = [1; dataSize];
+for i=1:N
+    idx1 = sum(IdxSteps(1:i));
+    idx2 = idx1 + IdxSteps(i+1)-1;
+    dataMic(idx1:idx2, :) = h5read(dataFiles{i}, '/AcousticData/Measurement');
+end
+
+% Filter and sort mics
 data          = dataMic(:,1:nMics);
 
 % Sampling frequency [Hz]
@@ -154,7 +197,7 @@ if isfield(setup, 'fs')
     fs = setup.fs;
     fprintf('Explicitly setting acquisition frequency: %i \n', fs);
 else
-    fs = h5read(dataFile,'/Acquisition/SampleRate');
+    fs = h5read(dataFile1,'/Acquisition/SampleRate');
 end
 
 %% Environment preparation
