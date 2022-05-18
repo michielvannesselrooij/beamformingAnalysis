@@ -1,6 +1,7 @@
 #Ignore
 *.h5
 *~
+*~$
 *.asv
 
 #Allow
