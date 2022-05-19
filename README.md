@@ -1,4 +1,5 @@
 # beamformingAnalysis
+Flexible analysis tool for beamforming data. Designed to work with TU Delft facilities and MuteSkin database.
  
 ## Installation
 - Clone (or download) this repository
