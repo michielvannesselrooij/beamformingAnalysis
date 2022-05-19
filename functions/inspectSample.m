@@ -14,7 +14,25 @@ function [setup, conditions, spectra] = inspectSample(setup, inputType)
 if strcmp(inputType, 'raw')
     dataFiles = dir('*.h5');
 elseif strcmp(inputType, 'processed')
-    dataFiles = dir('*.mat');
+    
+    % Look in inspectSample
+    if exist('inspectSample', 'dir') == 7         
+        dataFiles  = dir(['inspectSample' filesep '*sample*.mat']);
+        
+    else
+        % Look in inspect_*
+        if exist('inspect_*', 'dir') == 7         
+            folders    = dir('inspect_*');
+            dataFiles  = dir([folders(1).name filesep '*sample*.mat']);
+            
+        % Look in current folder
+        elseif exist('*sample*.mat', 'file') == 2 
+            dataFiles  = dir('*sample*.mat');
+            
+        else
+            error('Cannot find the processed sample file');
+        end
+    end
 end
 
 if length(dataFiles) < 1
