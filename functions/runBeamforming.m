@@ -87,16 +87,20 @@ elseif contains(setup.Re_source, 'override', 'IgnoreCase', true)                
 elseif contains(setup.Re_source, 'name', 'IgnoreCase', true)                    % From file name
     idx = strfind(dataFile1, 'Re') + 2;
     
-    seps = strfind(dataFile1, '_');
-    dIdx = 0;
-    if strcmp(dataFile1(idx+1), '_')
-        dIdx = 1;
+    if isempty(idx)
+        error('Trying to extract Re from file name, but "Re" not found');
+    else
+        seps = strfind(dataFile1, '_');
+        dIdx = 0;
+        if strcmp(dataFile1(idx+1), '_')
+            dIdx = 1;
+        end
+        next = find(seps > idx+dIdx, 1, 'first');
+
+        Re = 1/10 * 1e6 * str2double(dataFile1(idx+dIdx : seps(next)-1));
+
+        fprintf('Reynolds number extracted from file name: %0.2E \n', Re);
     end
-    next = find(seps > idx+dIdx, 1, 'first');
-        
-    Re = 1/10 * 1e6 * str2double(dataFile1(idx+dIdx : seps(next)-1));
-    
-    fprintf('Reynolds number extracted from file name: %0.2E \n', Re);
     
 else                                                                            % Default value
     warning(['Using fallback value for Re: ' num2str(Re_default)]);
@@ -168,23 +172,29 @@ if isfield(setup, 'wing')
     elseif contains(setup.AoA_source, 'name', 'IgnoreCase', true)               % From file name
         idx = strfind(dataFile1, 'AoA') + 3;
         
-        dIdx = 0;   % offset between 'AoA' and the value in the name
-        C = 1;      % Sign of AoA
-        if strcmp(dataFile1(idx+1), 'n')
-            C = -1;
-            dIdx = 1;
-        elseif strcmp(dataFile1(idx+1), 'p')
-            dIdx = 1;
+        if isempty(idx)
+            error('Trying to extract AoA from file name, but "AoA" not found');
+        else
+        
+            dIdx = 0;   % offset between 'AoA' and the value in the name
+            C = 1;      % Sign of AoA
+            if strcmp(dataFile1(idx+1), 'n')
+                C = -1;
+                dIdx = 1;
+            elseif strcmp(dataFile1(idx+1), 'p')
+                dIdx = 1;
+            end
+
+            if strcmp(dataFile1(idx+dIdx+1), '_')
+                dIdx = 2;
+            end
+
+            seps = strfind(dataFile1, '_');
+            next = find(seps > idx+dIdx, 1, 'first');
+
+            AoA = C * str2double(dataFile1(idx+dIdx : seps(next)-1));
+            
         end
-        
-        if strcmp(dataFile1(idx+dIdx+1), '_')
-            dIdx = 2;
-        end
-        
-        seps = strfind(dataFile1, '_');
-        next = find(seps > idx+dIdx, 1, 'first');
-        
-        AoA = C * str2double(dataFile1(idx+dIdx : seps(next)-1));
         
     else                                                                        % Default value
         warning('Using default value for AoA: 0 deg');
