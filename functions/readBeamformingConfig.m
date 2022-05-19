@@ -1,4 +1,11 @@
 function [action, setup] = readBeamformingConfig(file)
+% EXTRACTS ANALYSIS CONFIGURATION SETTINGS TO "SETUP" FROM THE CONFIG.xlsx
+% FILE AND DETERMINES THE ACTIONS TO PERFORM
+%
+% INPUTS
+% -------
+% file        string      relative or absolute path to config.xlsx
+% -------
 
 %% Load beamforming configuration file
 

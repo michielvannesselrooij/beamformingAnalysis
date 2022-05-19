@@ -1,4 +1,13 @@
 function [setup, conditions, spectra] = batchBeamforming(setup)
+% DO BEAMFORMING ON ALL DATA IN CURRENT FOLDER AND STORE AS .mat,
+% OPTIONALLY COMBINING FILES BASED ON SPECIFIED GROUPER STRING IN NAME
+%
+% INPUTS
+% -------
+% setup            structure   Passed to runBeamforming.m, see requirements
+% -------
+
+
 %% Select files
 
 dataFiles = dir('*.h5');

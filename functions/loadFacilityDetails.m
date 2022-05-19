@@ -1,5 +1,10 @@
 function setup = loadFacilityDetails(setup)
-% Augments setup structure with facility-specific settings
+% AUGMENTS "SETUP" WITH FACILITY-SPECIFIC SETTINGS
+%
+% INPUTS
+% -------
+% setup.facility    string      facility to load settings for
+% -------
 
 % LTT
 if contains(setup.facility, 'LTT')

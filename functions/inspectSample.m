@@ -1,4 +1,14 @@
 function [setup, conditions, spectra] = inspectSample(setup, inputType)
+% PROCESS (PART OF) FIRST FILE IN FOLDER AND SHOW RESULTS SUCH AS
+% MICROPHONE LAYOUT, BEAMFORMING + GEOMETRY + INTEGRATION WINDOW, AND
+% FINAL SPECTRUM. OPTIONALLY STORE RESULTS
+%
+% INPUTS
+% -------
+% inputType        string      File to load: 'raw' (.h5) or 'processed' (.mat)
+% setup            structure   Passed to runBeamforming.m, see requirements
+% -------
+
 %% Select file
 
 if strcmp(inputType, 'raw')

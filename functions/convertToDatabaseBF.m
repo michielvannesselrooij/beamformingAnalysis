@@ -1,4 +1,6 @@
 function convertToDatabaseBF(dataFolder, offset)
+% READ AND COMBINE PROCESSED BEAMFORMING DATA (.mat) AND STORE SPECTRA IN
+% MUTESKIN DATABASE FORMAT
 %
 % INPUTS
 % -------

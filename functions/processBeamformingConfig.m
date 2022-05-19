@@ -1,4 +1,11 @@
 function [setup, conditions, spectra] = processBeamformingConfig(folder)
+% MAIN FUNCTION DETERMINING WHICH FUNCTIONS TO RUN, BASED ON ACTION
+% AND CONFIGURATION RETRIEVED FROM CONFIG.xlsx
+
+% INPUTS
+% -------
+% folder        string      path to folder with the config file to consider
+% -------
 
 %% Read configuration
 configFile = [folder filesep 'config.xlsx'];

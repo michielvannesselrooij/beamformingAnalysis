@@ -1,4 +1,13 @@
 function setup = defineIntegrationWindow(setup)
+% SHIFTS THE INTEGRATION WINDOW TO THE SPECIFIED ANCHOR POINT, IF DEFINED
+%
+% INPUTS
+% -------
+% setup.intPlane_rel      4x1 scalar   Integration window coordinates
+%                                      relative to center mic
+%                                      [Xmin Xmax Ymin Ymax]
+% -------
+
 
 %% Check inputs
 if ~isfield(setup, 'intPlane_rel')

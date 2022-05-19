@@ -1,7 +1,27 @@
 function spectra = beamforming(dataFiles, conditions, setup)
-tic;
+% PERFORM BEAMFORMING ANALYSIS ON MULTI-MICROPHONE PRESSURE READINGS
+%
+% INPUTS
+% -------
+% dataFiles                     string or cell  Path to h5 data file(s)
+% setup.h                       Distance target from center microphone [m]
+% setup.micPos                  positions + ID of microphones [m, -]
+% setup.scanPlaneLimits         Scan plane Xmin, Xmax, Ymin, Ymax
+% conditions.c                  Speed of sound [m/s]
+% conditions.M_eff              Effective Mach number
+%
+% Optional
+% setup.fRange                  double or 2x1       Frequency range
+% setup.brokenMics              1D                  Broken mic indices
+% setup.overlap                 double              Data overlap (0<->1)
+% setup.scanPlaneResolution     double              Resolution [m]
+% setup.diagonalRemoval         1/0                 Toggle
+% setup.dataPortion             double              Data to use [0<->1]
+% setup.flowVector              3x1                 Direction of flow
+% -------
 
 %% Check inputs
+tic;
 
 % File selection
 if ischar(dataFiles)
@@ -19,8 +39,6 @@ else
     error('input "dataFiles" should be a string or a set of strings');
     
 end
-
-dataFile=1;
 
 % Frequency range
 if isfield(setup, 'fRange')

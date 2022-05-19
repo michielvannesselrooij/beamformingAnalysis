@@ -10,7 +10,7 @@ function SPL = selectIntegrationWindow(setup, conditions, spectra)
 % spectra.scanPlaneY    2D      y-positions of total beamforming window [m]
 % setup.h               double  Distance target from center microphone  [m]
 % setup.intPlane        4x1     Integration window: Xmin Xmax Ymin Ymax [m]    
-% setup.micPos          4xN     
+% setup.micPos          4xN     positions + ID of microphones           [m, -]
 %
 % (optional)
 % setup.p_ref           double  Reference pressure for calculating dB   [Pa]
@@ -30,6 +30,21 @@ scanPlaneY = spectra.scanPlaneY;
 h          = setup.h;
 intPlane   = setup.intPlane;
 micPos     = setup.micPos(1:3,:);
+
+%% Checks
+
+if size(h,1) ~= 4
+    error('Input micPos should have 4 rows and a column for every mic');
+end
+
+if length(f) ~= length(B)
+    error('Inputs B and f should be vectors of the same length');
+end
+
+if size(scanPlaneX) ~= size(scanPlaneY)
+    error(['Inputs scanPlaneX and scanPlaneY should be 2D matrices '...
+        'of the same length');
+end
 
 
 %% Settings
