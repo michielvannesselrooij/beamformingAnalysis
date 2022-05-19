@@ -1,12 +1,18 @@
 function [setup, conditions, spectra] = runBeamforming(dataFiles, setup)
-%% Get conditions and specific setup details for file
-% 
-% INPUTS:
-% dataFile              Path to h5 data file(s)
-% setup.T_source        Source for temperature value
-% setup.Re_source       Source for Reynolds number
-% setup.mu_source       Source for viscosity value
+% CALLS BEAMFORMING.m USING FILENAMES. FIRST FETCHES CONDITIONS FROM
+% SOURCES SPECIFIED IN "SETUP" AND COMPLETES "SETUP" BASED ON CONDITIONS
+%
+% INPUTS
+% -------
+% dataFiles             string or cell  Path to h5 data file(s)
+% setup.T_source        string          Source for temperature value
+% setup.Re_source       string          Source for Reynolds number
+% setup.mu_source       string          Source for viscosity value
+%
+% Note: Calls beamforming.m which has own input requirements on "setup"!
+% -------
 
+%% Get conditions and specific setup details for file
 % Select file to extract conditions from & define name
 if ischar(dataFiles)
     

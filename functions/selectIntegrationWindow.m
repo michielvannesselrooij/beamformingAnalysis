@@ -1,17 +1,35 @@
 function SPL = selectIntegrationWindow(setup, conditions, spectra)
+% SOURCES SPECIFIED IN "SETUP" AND COMPLETES "SETUP" BASED ON CONDITIONS
+%
+% INPUTS
+% -------
+% conditions.c          double  Speed of sound                          [m/s]
+% spectra.f             1D      Frequencies                             [Hz]
+% spectra.B             1D      Sound pressure levels for frequencies f [dB]
+% spectra.scanPlaneX    2D      x-positions of total beamforming window [m]
+% spectra.scanPlaneY    2D      y-positions of total beamforming window [m]
+% setup.h               double  Distance target from center microphone  [m]
+% setup.intPlane        4x1     Integration window: Xmin Xmax Ymin Ymax [m]    
+% setup.micPos          4xN     
+%
+% (optional)
+% setup.p_ref           double  Reference pressure for calculating dB   [Pa]
+% setup.resolution      double  Window resolution                       [m]
+% -------
+
 %% Inputs
 fprintf('Integrating selected window...\n');
 
+c          = conditions.c;
+
 f          = spectra.f;
 B          = spectra.B;
+scanPlaneX = spectra.scanPlaneX;
+scanPlaneY = spectra.scanPlaneY;
+
 h          = setup.h;
 intPlane   = setup.intPlane;
 micPos     = setup.micPos(1:3,:);
-
-c          = conditions.c;
-
-scanPlaneX = spectra.scanPlaneX;
-scanPlaneY = spectra.scanPlaneY;
 
 
 %% Settings
