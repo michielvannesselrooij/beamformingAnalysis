@@ -54,7 +54,7 @@ for i=1:N
     
     for j=1:length(setFiles)
         
-        disp(['  ' setFiles(j).name]);
+        fprintf(['  %s\n' setFiles(j).name]);
         
         % Extract data
         load([setFiles(j).folder filesep setFiles(j).name],...

@@ -38,7 +38,16 @@ elseif contains(action, 'batch', 'IgnoreCase', true)
 % Convert to database entries?
 elseif contains(action, 'convert', 'IgnoreCase', true)
     
-    % TODO to be completed
+    offset = input('Database id after which to add results: ');
+    
+    dataFolder = 'batchProcessResults';
+    if exist(dataFolder, 'dir') ~= 7
+        dataFolder = pwd;
+        fprintf(['Cannot find folder %s, looking for .mat files in ',...
+            ' current folder \n'], dataFolder);
+    end
+    
+    convertToDatabaseBF(dataFolder, offset)
     
 else
     error('Unknown action specified');
