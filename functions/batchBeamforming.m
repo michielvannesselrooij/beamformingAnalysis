@@ -69,4 +69,6 @@ while length(dataFiles) >= 1
     end
     save([outputFolder filesep name '.mat'],...
         'conditions', 'setup', 'spectra');
+    
+    fprintf('\nDone. Files in queue: %i \n' ,length(dataFiles));
 end
