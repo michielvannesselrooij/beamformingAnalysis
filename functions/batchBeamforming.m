@@ -53,20 +53,28 @@ while length(dataFiles) >= 1
         end
     end
     
-    % Beamforming
-    [setup, conditions, spectra] = runBeamforming(filePath, setup);
-    
-    % Integration
-    setup       = defineIntegrationWindow(setup);
-    spectra.SPL = selectIntegrationWindow(setup, conditions, spectra);
-
-    % Save result
+    % Determine output file
     if length(filePath) > 1
         idx = strfind(dataFile.name, setup.fileGrouper)-1;
         name = dataFile.name(1:idx);
     else
         name = dataFile.name;
     end
-    save([outputFolder filesep name '.mat'],...
-        'conditions', 'setup', 'spectra');
+    outputFileName = [outputFolder filesep name '.mat'];
+    
+    if exist(outputFileName, 'file') == 2
+        fprintf('Skipping, .mat file already exists');
+        
+    else
+        % Beamforming
+        [setup, conditions, spectra] = runBeamforming(filePath, setup);
+
+        % Integration
+        setup       = defineIntegrationWindow(setup);
+        spectra.SPL = selectIntegrationWindow(setup, conditions, spectra);
+
+        % Save result
+        save(outputFileName, 'conditions', 'setup', 'spectra');
+        
+    end
 end
