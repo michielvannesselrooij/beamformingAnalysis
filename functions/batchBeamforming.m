@@ -49,9 +49,9 @@ while length(dataFiles) >= 1
                 end
             end
             dataFiles(jj) = []; % Remove clustered files from list
+            filePath = filePaths;
         end
     end
-    filePath = filePaths;
     
     % Beamforming
     [setup, conditions, spectra] = runBeamforming(filePath, setup);
