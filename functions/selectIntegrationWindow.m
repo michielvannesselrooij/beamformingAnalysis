@@ -33,8 +33,8 @@ micPos     = setup.micPos(1:3,:);
 
 %% Checks
 
-if size(h,1) ~= 4
-    error('Input micPos should have 4 rows and a column for every mic');
+if size(micPos,1) < 3
+    error('Input micPos should have 3 at least rows (x;y;z)');
 end
 
 if length(f) ~= length(B)
@@ -43,7 +43,7 @@ end
 
 if size(scanPlaneX) ~= size(scanPlaneY)
     error(['Inputs scanPlaneX and scanPlaneY should be 2D matrices '...
-        'of the same length');
+        'of the same length']);
 end
 
 
