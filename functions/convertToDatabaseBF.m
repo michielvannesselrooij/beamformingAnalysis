@@ -32,7 +32,7 @@ for i=1:length(dataFiles)
     % Crop to name base
     nameBase = dataFiles(i).name(1:idx-1);
     
-    if sum(contains(name, nameBase)) == 0
+    if sum(strcmp(name, nameBase)) == 0
         name = [name; nameBase];
     end
     
@@ -42,7 +42,7 @@ N = length(name);
 % Open files and store in database format
 for i=1:N
     
-    disp(['Processing ' name{i}]);
+    fprintf('\nProcessing: %s\n', name{i});
     
     % Start file
     outputFile = [outputFolder filesep name{i} '.csv'];
@@ -54,32 +54,63 @@ for i=1:N
     
     for j=1:length(setFiles)
         
-        fprintf(['  %s\n' setFiles(j).name]);
+        fprintf(['  %s\n' setFiles(j).name]); 
         
         % Extract data
         load([setFiles(j).folder filesep setFiles(j).name],...
-            'spectra', 'conditions');
-        
-        % Write file
-        f           = spectra.f;
-        SPL         = spectra.SPL;
-        V           = conditions.U;
-        alpha       = conditions.AoA;
-        
-        if isfield(conditions, 'AoA_eff')
-            alpha_eff = conditions.AoA_eff;
-        else
-            alpha_eff = alpha;
-            warning(['No effective AoA found. Assuming effective AoA'...
-                ' is geometric AoA']);
-        end
-        
-        fprintf(fid, '%s%f%s%f%s%f%s%f%s%f\n', ',,', V, ',', alpha, ',',...
-            alpha_eff, ',', f(1), ',', SPL(1));
+            'setup', 'spectra', 'conditions');
 
-        for ii=2:length(f)
-            if ~isnan(f(ii)) && ~isnan(SPL(ii))
-                fprintf(fid, '%s%f%s%f\n', ',,,,,', f(ii), ',', SPL(ii));
+        % Double check if file belongs to this set by checking what's next
+        str = setFiles(j).name;
+        idx = strfind(str, name{i}) + length(name{i});
+        [~, ~, ext] = fileparts(str);
+
+        nextRe      = false;
+        nextAoA     = false;
+        nextGrouper = false;
+        nextExt     = false;
+
+        if isfield(setup, 'fileGrouper')
+            fileGrouper = setup.fileGrouper;
+            nextGrouper = strcmp(str(idx:idx+length(fileGrouper)-1),...
+                                                        fileGrouper);
+        end
+
+        if length(str) >= idx+3
+            nextRe  = strcmp(str(idx:idx+2), '_Re');
+        end
+        if length(str) >= idx+4
+            nextAoA = strcmp(str(idx:idx+3), '_AoA');
+        end
+        if length(str) >= idx+length(ext)
+            nextExt = strcmp(str(idx:idx+length(ext)-1), ext);
+        end
+
+        if  nextAoA || nextRe || nextGrouper || nextExt
+
+            % Write file
+            fprintf('  Adding file %s\n', str);
+            
+            f           = spectra.f;
+            SPL         = spectra.SPL;
+            V           = conditions.U;
+            alpha       = conditions.AoA;
+
+            if isfield(conditions, 'AoA_eff')
+                alpha_eff = conditions.AoA_eff;
+            else
+                alpha_eff = alpha;
+                fprintf(['    No effective AoA found. Assuming effective AoA'...
+                    ' is geometric AoA\n']);
+            end
+
+            fprintf(fid, '%s%f%s%f%s%f%s%f%s%f\n', ',,', V, ',', alpha, ',',...
+                alpha_eff, ',', f(1), ',', SPL(1));
+
+            for ii=2:length(f)
+                if ~isnan(f(ii)) && ~isnan(SPL(ii))
+                    fprintf(fid, '%s%f%s%f\n', ',,,,,', f(ii), ',', SPL(ii));
+                end
             end
         end
             
@@ -90,4 +121,4 @@ for i=1:N
 
 end
 
-fprintf('Conversion to database ready and stored in %s \n\n', outputFolder);
+fprintf('\nConversion to database ready and stored in %s \n\n', outputFolder);
