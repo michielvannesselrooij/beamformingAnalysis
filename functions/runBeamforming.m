@@ -97,7 +97,7 @@ elseif contains(setup.Re_source, 'name', 'IgnoreCase', true)                    
         end
         next = find(seps > idx+dIdx, 1, 'first');
 
-        Re = 1/10 * 1e6 * str2double(dataFile1(idx+dIdx : seps(next)-1));
+        Re = 1e6 * str2double(dataFile1(idx+dIdx : seps(next)-1));
 
         fprintf('Reynolds number extracted from file name: %0.2E \n', Re);
     end
