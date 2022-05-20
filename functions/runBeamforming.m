@@ -178,14 +178,14 @@ if isfield(setup, 'wing')
         
             dIdx = 0;   % offset between 'AoA' and the value in the name
             C = 1;      % Sign of AoA
-            if strcmp(dataFile1(idx+1), 'n')
+            if strcmp(dataFile1(idx), 'n')
                 C = -1;
                 dIdx = 1;
-            elseif strcmp(dataFile1(idx+1), 'p')
+            elseif strcmp(dataFile1(idx), 'p')
                 dIdx = 1;
             end
 
-            if strcmp(dataFile1(idx+dIdx+1), '_')
+            if strcmp(dataFile1(idx+dIdx), '_')
                 dIdx = 2;
             end
 
@@ -193,6 +193,7 @@ if isfield(setup, 'wing')
             next = find(seps > idx+dIdx, 1, 'first');
 
             AoA = C * str2double(dataFile1(idx+dIdx : seps(next)-1));
+            fprintf('AoA extracted from file name: %0.1f deg\n', AoA);
             
         end
         

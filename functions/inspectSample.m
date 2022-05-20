@@ -10,7 +10,6 @@ function [setup, conditions, spectra] = inspectSample(setup, inputType)
 % -------
 
 %% Select file
-
 if strcmp(inputType, 'raw')
     dataFiles = dir('*.h5');
 elseif strcmp(inputType, 'processed')
@@ -45,7 +44,6 @@ end
 
 
 %% Settings
-
 if strcmp(inputType, 'raw')
     setup.dataPortion = input('Portion of data to use in this check (%): ')/100;
 end
@@ -68,27 +66,7 @@ spectra.SPL = selectIntegrationWindow(setup, conditions, spectra);
 
 
 %% Show detailed output
-
-% Show mic positions
-showMicLayout(setup.micPos(1,:), setup.micPos(2,:));
-
-% Show scan plane at various frequencies
-if ~isfield(setup, 'fRange')
-    setup.fRange = [500 4000];
-end
-
-fShow = round(linspace(setup.fRange(1), setup.fRange(2), nPlots));
-for i=1:nPlots
-    showBeamforming(spectra, setup, fShow(i));
-end
-
-% Show final spectrum
-figure;
-plot(spectra.f, spectra.SPL, 'b-', 'LineWidth', 2);
-xlabel('f [Hz]');
-ylabel('SPL [dB]');
-box on;
-set(gca, 'XScale', 'log')
+beamFormingSummary(setup, spectra, nPlots)
 
 
 %% Store result

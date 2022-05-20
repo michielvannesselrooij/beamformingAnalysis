@@ -85,6 +85,24 @@ while length(dataFiles) >= 1
         % Save result
         save(outputFileName, 'conditions', 'setup', 'spectra');
         
+        % Create and store figures
+        nPlots = 10;
+        beamFormingSummary(setup, spectra, nPlots)
+        
+        figureFolder = [outputFolder filesep  'figures_name'];
+        mkdir(figureFolder);
+        
+        figList = handle( sort( double(findall(0, 'type', 'figure') ) ));
+        savefig(figList, figureFolder, 'compact');
+        for i=1:length(figList)
+            set(figList(i),'WindowStyle','normal');
+            set(figList(i), 'Units', 'pixels', 'Position', [10 10 800 600]);
+            saveas(figList(i), [figureFolder filesep 'figure_' num2str(i) '.png']);
+        end
+        for i=1:length(figList)
+            close;
+        end
+        
     end
 
     fprintf('\nDone. Files in queue: %i \n' ,length(dataFiles));
