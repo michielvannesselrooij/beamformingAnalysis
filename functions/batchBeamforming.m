@@ -89,11 +89,11 @@ while length(dataFiles) >= 1
         nPlots = 10;
         beamFormingSummary(setup, spectra, nPlots)
         
-        figureFolder = [outputFolder filesep  'figures_name'];
+        figureFolder = [outputFolder filesep  'figures_' name];
         mkdir(figureFolder);
         
         figList = handle( sort( double(findall(0, 'type', 'figure') ) ));
-        savefig(figList, figureFolder, 'compact');
+        savefig(figList, [figureFolder filesep 'figures'], 'compact');
         for i=1:length(figList)
             set(figList(i),'WindowStyle','normal');
             set(figList(i), 'Units', 'pixels', 'Position', [10 10 800 600]);
