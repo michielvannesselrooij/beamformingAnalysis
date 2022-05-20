@@ -1,4 +1,4 @@
-function [setup, conditions, spectra] = processBeamformingConfig(folder)
+function processBeamformingConfig(folder)
 % MAIN FUNCTION DETERMINING WHICH FUNCTIONS TO RUN, BASED ON ACTION
 % AND CONFIGURATION RETRIEVED FROM CONFIG.xlsx
 
@@ -38,8 +38,6 @@ elseif contains(action, 'batch', 'IgnoreCase', true)
 % Convert to database entries?
 elseif contains(action, 'convert', 'IgnoreCase', true)
     
-    offset = input('Database id after which to add results: ');
-    
     dataFolder = 'batchProcessResults';
     if exist(dataFolder, 'dir') ~= 7
         dataFolder = pwd;
@@ -47,7 +45,7 @@ elseif contains(action, 'convert', 'IgnoreCase', true)
             ' current folder \n'], dataFolder);
     end
     
-    convertToDatabaseBF(dataFolder, offset)
+    convertToDatabaseBF(dataFolder)
     
 else
     error('Unknown action specified');

@@ -1,11 +1,10 @@
-function convertToDatabaseBF(dataFolder, offset)
+function convertToDatabaseBF(dataFolder)
 % READ AND COMBINE PROCESSED BEAMFORMING DATA (.mat) AND STORE SPECTRA IN
 % MUTESKIN DATABASE FORMAT
 %
 % INPUTS
 % -------
 % dataFolder        string      relative or absolute path to .mat files
-% offset            integer     last current entry in database
 % -------
 
 %% Create output location
@@ -46,7 +45,8 @@ for i=1:N
     disp(['Processing ' name{i}]);
     
     % Start file
-    fid = fopen([outputFolder filesep 'noise-' num2str(i+offset) '.csv'], 'w');
+    outputFile = [outputFolder filesep name{i} '.csv'];
+    fid = fopen(outputFile, 'w');
     fprintf(fid, '%s\n', 'rho,T,V,alpha,alpha_eff,f,dB');
     
     % Find all data sets for this configuration
@@ -67,7 +67,11 @@ for i=1:N
         alpha       = conditions.AoA;
         
         if isfield(conditions, 'AoA_eff')
-            alpha_eff   = conditions.AoA_eff;
+            alpha_eff = conditions.AoA_eff;
+        else
+            alpha_eff = alpha;
+            warning(['No effective AoA found. Assuming effective AoA'...
+                ' is geometric AoA']);
         end
         
         fprintf(fid, '%s%f%s%f%s%f%s%f%s%f\n', ',,', V, ',', alpha, ',',...

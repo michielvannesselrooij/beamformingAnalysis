@@ -4,5 +4,4 @@
 % located in this folder
 
 clc; clear; close all;
-
-[setup, conditions, spectra] = processBeamformingConfig(pwd);
+processBeamformingConfig(pwd);
