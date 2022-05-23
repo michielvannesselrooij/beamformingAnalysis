@@ -29,6 +29,12 @@ else
     error('Missing coordinates: spectra.scanPlaneY"');
 end
 
+% Integration plane
+if isfield(setup, 'intPlane')
+    intPlaneX = setup.intPlane([1,3]);
+    intPlaneY = setup.intPlane([2,4]);
+end
+
 %% Prepare data to show
 if ~exist('f_plot', 'var')
     B_select = sum(spectra.B,3);
@@ -65,12 +71,12 @@ if isfield(setup, 'wing')
     plot(x, y, 'w-', 'LineWidth', 3);
 end
 
-% Show integration window
-intPlaneX = setup.intPlane([1,3]);
-intPlaneY = setup.intPlane([2,4]);
-x = [intPlaneX(1), intPlaneX(1), intPlaneX(2), intPlaneX(2), intPlaneX(1)];
-y = [intPlaneY(1), intPlaneY(2), intPlaneY(2), intPlaneY(1), intPlaneY(1)];
-plot(x, y, 'w--', 'LineWidth', 2);
+if exist('intPlane', 'var')
+    % Show integration window
+    x = [intPlaneX(1), intPlaneX(1), intPlaneX(2), intPlaneX(2), intPlaneX(1)];
+    y = [intPlaneY(1), intPlaneY(2), intPlaneY(2), intPlaneY(1), intPlaneY(1)];
+    plot(x, y, 'w--', 'LineWidth', 2);
+end
 
 % Format
 colormap copper
