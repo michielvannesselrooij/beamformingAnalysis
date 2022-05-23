@@ -71,7 +71,7 @@ if isfield(setup, 'wing')
     plot(x, y, 'w-', 'LineWidth', 3);
 end
 
-if exist('intPlane', 'var')
+if exist('intPlaneX', 'var')
     % Show integration window
     x = [intPlaneX(1), intPlaneX(1), intPlaneX(2), intPlaneX(2), intPlaneX(1)];
     y = [intPlaneY(1), intPlaneY(2), intPlaneY(2), intPlaneY(1), intPlaneY(1)];

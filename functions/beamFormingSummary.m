@@ -1,4 +1,4 @@
-function beamFormingSummary(setup, spectra, nPlots)
+function beamformingSummary(setup, spectra, nPlots)
 %% PLOTS BEAMFROMING RESULTS IN VARIOUS WAYS. OPTIONALLY SAVES THEM
 %
 % INPUT

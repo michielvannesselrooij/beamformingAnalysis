@@ -66,7 +66,7 @@ spectra.SPL = selectIntegrationWindow(setup, conditions, spectra);
 
 
 %% Show detailed output
-beamFormingSummary(setup, spectra, nPlots)
+beamformingSummary(setup, spectra, nPlots)
 
 
 %% Store result

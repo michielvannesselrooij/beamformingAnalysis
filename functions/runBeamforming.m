@@ -44,6 +44,7 @@ setup.name = nameBase;
 T_default = 20;
 if contains(setup.T_source, 'data', 'IgnoreCase', true)                         % From data file
     T = h5read(dataFile1,'/Conditions/Temperature');
+    fprintf('Temperature from data file: %0.1f \n', T);
     
 elseif contains(setup.T_source, 'override', 'IgnoreCase', true)                 % Override value
     if isfield(setup, 'T_override')
@@ -72,6 +73,7 @@ conditions.c     = 331.5 + (0.6*conditions.T);
 Re_default = 0;
 if contains(setup.Re_source, 'data', 'IgnoreCase', true)                        % From data file
     Re = h5read(dataFile1,'/Conditions/Reynolds');
+    fprintf('Reynolds number from data file: %0.2E \n', Re);
     
 elseif contains(setup.Re_source, 'override', 'IgnoreCase', true)                % Override value
     if isfield(setup, 'Re_override')
@@ -125,6 +127,7 @@ conditions.Re = Re;
 mu_default = 1.825e-5;
 if contains(setup.mu_source, 'data', 'IgnoreCase', true)                        % From data file
     mu = h5read(dataFile1,'/Conditions/Viscosity');
+    fprintf('Viscosity from data file: %0.2E \n', mu);
     
 elseif contains(setup.mu_source, 'override', 'IgnoreCase', true)                % Override value
     if isfield(setup, 'mu_override')
@@ -152,6 +155,7 @@ rho = 0;
 for i=1:length(dataFields)
     if strcmp(dataFields(i).Name, 'Density')
         rho = h5read(dataFile1,'/Conditions/Density');
+        fprintf('Air density from data file: %0.2f \n', rho);
     end
 end
 if rho == 0
@@ -168,6 +172,7 @@ if isfield(setup, 'wing')
     AoA_default = 0;
     if contains(setup.AoA_source, 'data', 'IgnoreCase', true)                   % From data file
         AoA = h5read(dataFile1,'/Conditions/AngleOfAttack');
+        fprintf('AoA from data file: %0.1f \n', AoA);
         
     elseif contains(setup.AoA_source, 'override', 'IgnoreCase', true)           % Override value
         if isfield(setup, 'AoA_override')

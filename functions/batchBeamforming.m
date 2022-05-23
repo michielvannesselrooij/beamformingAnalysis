@@ -87,7 +87,7 @@ while length(dataFiles) >= 1
         
         % Create and store figures
         nPlots = 10;
-        beamFormingSummary(setup, spectra, nPlots)
+        beamformingSummary(setup, spectra, nPlots)
         
         figureFolder = [outputFolder filesep  'figures_' name];
         mkdir(figureFolder);
