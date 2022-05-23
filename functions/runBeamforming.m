@@ -85,21 +85,32 @@ elseif contains(setup.Re_source, 'override', 'IgnoreCase', true)                
     end
     
 elseif contains(setup.Re_source, 'name', 'IgnoreCase', true)                    % From file name
-    idx = strfind(dataFile1, 'Re') + 2;
+    [~, str, ~] = fileparts(dataFile1);
+    idx = strfind(str, 'Re') + 2;
     
     if isempty(idx)
         error('Trying to extract Re from file name, but "Re" not found');
     else
-        seps = strfind(dataFile1, '_');
+        seps = strfind(str, '_');
         dIdx = 0;
-        if strcmp(dataFile1(idx+1), '_')
+        if strcmp(str(idx), '_')
             dIdx = 1;
         end
         next = find(seps > idx+dIdx, 1, 'first');
+        
+        if isempty(next)
+            idxEnd = length(str); % Value at end of name
+        else
+            idxEnd = seps(next)-1;
+        end
 
-        Re = 1e6 * str2double(dataFile1(idx+dIdx : seps(next)-1));
+        Re = 1e6 * str2double(str(idx+dIdx : idxEnd));
 
         fprintf('Reynolds number extracted from file name: %0.2E \n', Re);
+    end
+      
+    if isnan(Re)
+        error('Trying to extract Reynolds from file name but got NaN');
     end
     
 else                                                                            % Default value
@@ -170,7 +181,8 @@ if isfield(setup, 'wing')
         end
         
     elseif contains(setup.AoA_source, 'name', 'IgnoreCase', true)               % From file name
-        idx = strfind(dataFile1, 'AoA') + 3;
+        [~, str, ~] = fileparts(dataFile1);
+        idx = strfind(str, 'AoA') + 3;
         
         if isempty(idx)
             error('Trying to extract AoA from file name, but "AoA" not found');
@@ -178,23 +190,33 @@ if isfield(setup, 'wing')
         
             dIdx = 0;   % offset between 'AoA' and the value in the name
             C = 1;      % Sign of AoA
-            if strcmp(dataFile1(idx), 'n')
+            if strcmp(str(idx), 'n')
                 C = -1;
                 dIdx = 1;
-            elseif strcmp(dataFile1(idx), 'p')
+            elseif strcmp(str(idx), 'p')
                 dIdx = 1;
             end
 
-            if strcmp(dataFile1(idx+dIdx), '_')
-                dIdx = 2;
+            if strcmp(str(idx+dIdx), '_')
+                dIdx = dIdx+1;
             end
 
-            seps = strfind(dataFile1, '_');
+            seps = strfind(str, '_');
             next = find(seps > idx+dIdx, 1, 'first');
+            
+            if isempty(next)
+                idxEnd = length(str); % Value at end of name
+            else
+                idxEnd = seps(next)-1;
+            end
 
-            AoA = C * str2double(dataFile1(idx+dIdx : seps(next)-1));
+            AoA = C * str2double(str(idx+dIdx : idxEnd));
             fprintf('AoA extracted from file name: %0.1f deg\n', AoA);
             
+        end
+        
+        if isnan(AoA)
+            error('Trying to extract AoA from file name but got NaN');
         end
         
     else                                                                        % Default value

@@ -63,7 +63,7 @@ while length(dataFiles) >= 1
     end
     
     % Determine output file
-    if length(filePath) > 1
+    if iscell(filePath)
         idx = strfind(dataFile.name, setup.fileGrouper)-1;
         name = dataFile.name(1:idx);
     else
