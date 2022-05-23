@@ -29,7 +29,7 @@ elseif contains(setup.facility, '(A)') || contains(setup.facility, 'A-tunnel')
     
     % Settings
     setup.flowVector      = [0, 1, 0];                  % Flow vector
-    setup.scanPlaneLimits = [-0.2, 0.2, -1, 1];         % Scan plane
+    setup.scanPlaneLimits = [-0.2, 0.2, -0.5, 0.5];     % Scan plane
     setup.anchor          = [0, setup.wing.TEpos];      % Anchor point integration window
     setup.wing.rotAxis    = 'horizontal';               % Axis of rotation
     
