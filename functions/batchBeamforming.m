@@ -67,7 +67,7 @@ while length(dataFiles) >= 1
         idx = strfind(dataFile.name, setup.fileGrouper)-1;
         name = dataFile.name(1:idx);
     else
-        name = dataFile.name;
+        [~, name, ~] = fileparts(dataFile.name);
     end
 
     outputFileName = [outputFolder filesep name '.mat'];
