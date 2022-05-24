@@ -1,4 +1,14 @@
-function showG2map(setup, spectra)
+function showIntermediateMap(setup, spectra)
+% PLOTS ONE OR MORE INTERMEDIATE BEAMFORMING MAPS
+%
+% INPUTS
+% -------
+% f            (cell array of) 1D       Frequency range
+% SPL          (cell array of) 1D       Sound pressure levels for f
+% name         (cell array of) string   Legend names
+% -------
+
+%% Prepare data
 
 % Make g2 map
 B_g2  = reshape(B2_ind, [size(scanPlaneX),length(f)]);
