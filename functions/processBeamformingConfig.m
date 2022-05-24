@@ -22,18 +22,21 @@ end
 if contains(action, 'inspect', 'IgnoreCase', true) &&...
        contains(action, 'raw', 'IgnoreCase', true)
    
-    [setup, conditions, spectra] = inspectSample(setup, 'raw');
+    inspectSample(setup, 'raw');
     
 % Inspect a raw data sample?
 elseif contains(action, 'inspect', 'IgnoreCase', true) &&...
        contains(action, 'processed', 'IgnoreCase', true)
    
-    [setup, conditions, spectra] = inspectSample(setup, 'processed');
+    inspectSample(setup, 'processed');
         
 % Batch process raw data?
 elseif contains(action, 'batch', 'IgnoreCase', true)
     
-    [setup, conditions, spectra] = batchBeamforming(setup);
+    batchBeamforming(setup);
+    
+elseif contains(action, 'adjust', 'IgnoreCase', true)
+    adjustIntegrationWindow(setup)
     
 % Convert to database entries?
 elseif contains(action, 'convert', 'IgnoreCase', true)
