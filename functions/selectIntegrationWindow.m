@@ -55,9 +55,9 @@ dynRange = 6;
 % Reference pressure
 if isfield(setup, 'p_ref')
     p_ref = setup.p_ref;
+    fprintf('  Using specified reference pressure: %.0E Pa \n', p_ref)
 else
     p_ref = 20e-6;
-    fprintf('  Using default reference pressure: %.0E Pa \n', p_ref)
 end
 
 % Resolution
