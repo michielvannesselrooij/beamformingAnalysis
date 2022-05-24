@@ -1,7 +1,9 @@
 function showG2map(setup, spectra)
 
+pref = 20e-6;
+
 % Make g2 map
-B_g2  = reshape(B2_ind, [size(scanPlaneX),length(f)]);
+B_g2  = reshape(B2_ind, [size(scan_plane_x),length(f_ind_c_averaged)]);
 B_sum = sum(B_g2,3);
 
 % Convert to dB
@@ -12,16 +14,23 @@ scanPlaneB = scanPlaneB - max(max(scanPlaneB));
 
 
 %% Plot 
-set(gca,'FontSize',24); set(gca,'LineWidth',2.5); hold on;
-set(gca,'fontname','times');  set(gcf,'color','w');
-surf(scan_plane_x-x_TE,scan_plane_y-y_TE,scan_plane_B, 'EdgeColor', 'none');
-col_bar = colorbar('eastoutside');
-caxis([max(max(scan_plane_B))-dynamic_range, max(max(scan_plane_B))])
-col_bar.Label.String = 'SPL [dB]';
-col_bar.LineWidth = 2;
-colormap jet
-hold on    
-alpha 0.75
+figure;
+hold on;
+
+set(gca,'FontSize',24);
+set(gca,'LineWidth',2.5)
+set(gca,'fontname','times');
+set(gcf,'color','w');
+
+surf(scan_plane_x, scan_plane_y, scanPlaneB, 'EdgeColor', 'none');
+
+hc = colorbar('EastOutside');
+hc.Label.String = 'SPL [dB]';
+hc.LineWidth = 2;
+colormap copper
+
+caxis([max(max(scanPlaneB))-dynamic_range, max(max(scanPlaneB))])
+
 xlabel('x [m]')
 ylabel('y [m]')
 title({strcat('CFDBF at ',num2str(f_lower/1000),' - ',num2str(f_upper/1000),' kHz. Intermediate map before SPI')})
