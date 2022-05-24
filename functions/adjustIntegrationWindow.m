@@ -3,7 +3,7 @@ function adjustIntegrationWindow(setup)
 %
 % INPUTS
 % -------
-% setup            structure   Passed to runBeamforming.m, see requirements
+% setup            structure   Passed to  defineIntegrationWindow and selectIntegrationWindow
 % -------
 
 
@@ -22,6 +22,8 @@ if isempty(dataFiles)
             ' or have a folder called "batchProcessResults"']);
     end
 end
+
+fprintf('Reprocessing data with new integration window settings...\n');
 
 %% Create output location
 outputFolder = 'reprocessedResults';
@@ -46,8 +48,10 @@ while length(dataFiles) >= 1
         
     else
         
-        % Load data
-        load(filePath, 'conditions', 'spectra'); % Skip "setup"
+        % Load data and substitute new integration window
+        intPlane_rel_new   = setup.intPlane_rel;
+        load(filePath, 'setup', 'conditions', 'spectra');
+        setup.intPlane_rel = intPlane_rel_new;
 
         % Integration on window
         setup       = defineIntegrationWindow(setup);

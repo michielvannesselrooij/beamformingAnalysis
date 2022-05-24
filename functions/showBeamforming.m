@@ -38,6 +38,7 @@ end
 %% Prepare data to show
 
 diagnostic = false;
+abort = false;
 if ~exist('f_plot', 'var')
     
     B_select = sum(spectra.B,3);
@@ -60,7 +61,9 @@ elseif ischar(f_plot) && strcmp(f_plot, 'diagnostic')
     if isfield(spectra, 'scanPlaneB')
         scanPlaneB = spectra.scanPlaneB;
     else
-        error('Trying to show intermediate map, but missing "spectra.scanPlaneB"');
+        warning(['Trying to show intermediate map,'....
+            ' but missing "spectra.scanPlaneB". Aborting.']);
+        abort = true;
     end
     
 else
@@ -68,50 +71,52 @@ else
 end
     
 
-
 %% Create figure
-figure;
+if ~abort
 
-% Show beamforming
-if diagnostic
-    contourf(scanPlaneX, scanPlaneY, scanPlaneB, 20, 'LineColor', 'none');
-else
-    contourf(scanPlaneX, scanPlaneY, SPL, 20, 'LineColor', 'none');
+    figure;
+
+    % Show beamforming
+    if diagnostic
+        contourf(scanPlaneX, scanPlaneY, scanPlaneB, 20, 'LineColor', 'none');
+    else
+        contourf(scanPlaneX, scanPlaneY, SPL, 20, 'LineColor', 'none');
+    end
+
+    % Show geometry (optional)
+    hold on
+    if isfield(setup, 'wing')
+        af_loc_x = [setup.wing.loc(1), setup.wing.loc(3)];
+        af_loc_y = [setup.wing.loc(2), setup.wing.loc(4)];
+
+        x = [af_loc_x(1), af_loc_x(1), af_loc_x(2), af_loc_x(2), af_loc_x(1)];
+        y = [af_loc_y(1), af_loc_y(2), af_loc_y(2), af_loc_y(1), af_loc_y(1)];
+
+        plot(x, y, 'w-', 'LineWidth', 3);
+    end
+
+    if exist('intPlaneX', 'var')
+        % Show integration window
+        x = [intPlaneX(1), intPlaneX(1), intPlaneX(2), intPlaneX(2), intPlaneX(1)];
+        y = [intPlaneY(1), intPlaneY(2), intPlaneY(2), intPlaneY(1), intPlaneY(1)];
+        plot(x, y, 'w--', 'LineWidth', 2);
+    end
+
+    % Format
+    colormap copper
+    hc = colorbar;
+    title(hc, 'dB');
+    axis equal
+    xlabel('x [m]');
+    ylabel('y [m]');
+
+    if diagnostic
+        title('Intermediate (g2) map');
+
+    elseif exist('f_plot_final', 'var')
+        title([num2str(f_plot_final) ' Hz']);
+    end
+
+    % Wrap up
+    fprintf('\n');
 end
-
-% Show geometry (optional)
-hold on
-if isfield(setup, 'wing')
-    af_loc_x = [setup.wing.loc(1), setup.wing.loc(3)];
-    af_loc_y = [setup.wing.loc(2), setup.wing.loc(4)];
-
-    x = [af_loc_x(1), af_loc_x(1), af_loc_x(2), af_loc_x(2), af_loc_x(1)];
-    y = [af_loc_y(1), af_loc_y(2), af_loc_y(2), af_loc_y(1), af_loc_y(1)];
-
-    plot(x, y, 'w-', 'LineWidth', 3);
-end
-
-if exist('intPlaneX', 'var')
-    % Show integration window
-    x = [intPlaneX(1), intPlaneX(1), intPlaneX(2), intPlaneX(2), intPlaneX(1)];
-    y = [intPlaneY(1), intPlaneY(2), intPlaneY(2), intPlaneY(1), intPlaneY(1)];
-    plot(x, y, 'w--', 'LineWidth', 2);
-end
-
-% Format
-colormap copper
-hc = colorbar;
-title(hc, 'dB');
-axis equal
-xlabel('x [m]');
-ylabel('y [m]');
-    
-if diagnostic
-    title('Intermediate (g2) map');
-    
-elseif exist('f_plot_final', 'var')
-    title([num2str(f_plot_final) ' Hz']);
-end
-
-%% Wrap up
-fprintf('\n');
