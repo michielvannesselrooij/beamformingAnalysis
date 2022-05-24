@@ -358,7 +358,7 @@ for f_index = 1:length(f)
 end
 
 % Store intermediate map
-B_g2       = reshape(B_ind2, [size(scan_plane_x), length(f)]);
+B_g2       = reshape(B2_ind, [size(scan_plane_x), length(f)]);
 B_sum      = sum(B_g2, 3);
 pref       = 20e-6;
 scanPlaneB = 20*log10(sqrt(B_sum)/(h*pref));
