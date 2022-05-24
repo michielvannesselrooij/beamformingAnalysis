@@ -36,8 +36,14 @@ if isfield(setup, 'intPlane')
 end
 
 %% Prepare data to show
+
+diagnostic = false;
 if ~exist('f_plot', 'var')
+    
     B_select = sum(spectra.B,3);
+    SPL = 10*log10(B_select/p_ref^2);
+    
+    fprintf('No frequency specified for plotting. Using sum of all frequencies\n');
     
 elseif isscalar(f_plot)
     
@@ -46,18 +52,32 @@ elseif isscalar(f_plot)
     
     f_plot_final = spectra.f(idx);
     B_select = spectra.B(:,:,idx);
+    SPL = 10*log10(B_select/p_ref^2);
+    
+elseif ischar(f_plot) && strcmp(f_plot, 'diagnostic')
+    diagnostic = true;
+    
+    if isfield(spectra, 'scanPlaneB')
+        scanPlaneB = spectra.scanPlaneB;
+    else
+        error('Trying to show intermediate map, but missing "spectra.scanPlaneB"');
+    end
     
 else
     error('Input "f_plot" should be a scalar, or left empty');
 end
     
-SPL = 10*log10(B_select/p_ref^2);
+
 
 %% Create figure
 figure;
 
 % Show beamforming
-contourf(scanPlaneX, scanPlaneY, SPL, 20, 'LineColor', 'none');
+if diagnostic
+    contourf(scanPlaneX, scanPlaneY, scanPlaneB, 20, 'LineColor', 'none');
+else
+    contourf(scanPlaneX, scanPlaneY, SPL, 20, 'LineColor', 'none');
+end
 
 % Show geometry (optional)
 hold on
@@ -85,8 +105,11 @@ title(hc, 'dB');
 axis equal
 xlabel('x [m]');
 ylabel('y [m]');
-
-if exist('f_plot_final', 'var')
+    
+if diagnostic
+    title('Intermediate (g2) map');
+    
+elseif exist('f_plot_final', 'var')
     title([num2str(f_plot_final) ' Hz']);
 end
 

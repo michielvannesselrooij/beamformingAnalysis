@@ -12,6 +12,9 @@ function beamformingSummary(setup, spectra, nPlots)
 %% Show mic positions
 showMicLayout(setup.micPos(1,:), setup.micPos(2,:));
 
+%% Show intermediate map for diagnostics
+showBeamforming(spectra, setup, 'diagnostic');
+
 %% Show scan plane at various frequencies
 if isfield(setup, 'fRange')
     fRange = setup.fRange;
