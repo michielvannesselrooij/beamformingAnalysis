@@ -1,4 +1,14 @@
-function showG2map(setup, spectra)
+function showIntermediateMap(setup, spectra)
+% PLOTS ONE OR MORE INTERMEDIATE BEAMFORMING MAPS
+%
+% INPUTS
+% -------
+% f            (cell array of) 1D       Frequency range
+% SPL          (cell array of) 1D       Sound pressure levels for f
+% name         (cell array of) string   Legend names
+% -------
+
+%% Prepare data
 
 pref = 20e-6;
 

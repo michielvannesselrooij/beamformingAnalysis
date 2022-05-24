@@ -17,7 +17,7 @@ function spectra = beamforming(dataFiles, conditions, setup)
 % setup.scanPlaneResolution     double              Resolution [m]
 % setup.diagonalRemoval         1/0                 Toggle
 % setup.dataPortion             double              Data to use [0<->1]
-% setup.flowVector              3x1                 Direction of flow
+% setup.flowVector              3x1                 Direction of flow      
 % -------
 
 %% Check inputs
@@ -276,7 +276,7 @@ X_chunk_hann_collect      = X_chunk_hann;
 
 % Averaging chunks
 X_chunk_ff = permute(sqrt(1/(chunk_length*df_chunk)).*X_chunk_hann_collect(ind_f_lower:ind_f_upper,:,:),[2,3,1]);
-f_ind_c_averaged = f_chunk(ind_f_lower:ind_f_upper);
+f = f_chunk(ind_f_lower:ind_f_upper);
 
 C_av=zeros(nMics^2,ind_f_upper-ind_f_lower+1);
 
@@ -338,14 +338,14 @@ delt   = repmat(delt_all, [1,1,1]);
 
 fprintf('Beamforming...\n');
 
-B_ind  = zeros([numel(scan_plane_x), length(f_ind_c_averaged)]);
-B2_ind = zeros([numel(scan_plane_x), length(f_ind_c_averaged)]);
+B_ind  = zeros([numel(scan_plane_x), length(f)]);
+B2_ind = zeros([numel(scan_plane_x), length(f)]); % intermediate map
 bar_bf = waitbar(0, 'CFDBF: Performing beamforming ...');
 
-for f_index = 1:length(f_ind_c_averaged)
-    waitbar(f_index/length(f_ind_c_averaged));
+for f_index = 1:length(f)
+    waitbar(f_index/length(f));
     
-    g     = ((-exp(-2*pi*1i*f_ind_c_averaged(f_index).*delt)) ./ radius);
+    g     = ((-exp(-2*pi*1i*f(f_index).*delt)) ./ radius);
     gsel  = reshape(g, [numel(scan_plane_x), nMics]);
     C_ind = C_averaged(:, :, f_index);
     
@@ -353,18 +353,28 @@ for f_index = 1:length(f_ind_c_averaged)
         Norm1 = norm(conj(gsel(s,:))*C_ind.'*gsel(s,:).');
         gnorm = norm(gsel(s,:));
         B_ind(s,f_index)  = Norm1/gnorm^4;
-        B2_ind(s,f_index) = Norm1/gnorm^2;
+        B2_ind(s,f_index) = Norm1/gnorm^2; % intermediate map
     end
 end
 
-close(bar_bf);
+% Store intermediate map
+B_g2       = reshape(B_ind2, [size(scan_plane_x), length(f)]);
+B_sum      = sum(B_g2, 3);
+pref       = 20e-6;
+scanPlaneB = 20*log10(sqrt(B_sum)/(h*pref));
+scanPlaneB = scanPlaneB - max(max(scanPlaneB));
 
-B = reshape(B_ind, [size(scan_plane_x), length(f_ind_c_averaged)]);
+% Final map
+B            = reshape(B_ind,  [size(scan_plane_x), length(f)]);
+
+% Finish
+close(bar_bf);
 
 %% Structure output
 
 spectra.B                  = B;
-spectra.f                  = f_ind_c_averaged;
+spectra.scanPlaneB         = scanPlaneB;
+spectra.f                  = f;
 spectra.scanPlaneX         = scan_plane_x;
 spectra.scanPlaneY         = scan_plane_y;
 
