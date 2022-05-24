@@ -42,10 +42,16 @@ elseif contains(action, 'adjust', 'IgnoreCase', true)
 elseif contains(action, 'convert', 'IgnoreCase', true)
     
     dataFolder = 'batchProcessResults';
+        
     if exist(dataFolder, 'dir') ~= 7
-        dataFolder = pwd;
+        fprintf(['Cannot find folder %s, looking for .mat files in ',...
+            ' reprocessedResults \n'], dataFolder);
+        dataFolder = 'reprocessedResults';
+        
+    elseif exist(dataFolder, 'dir') ~= 7
         fprintf(['Cannot find folder %s, looking for .mat files in ',...
             ' current folder \n'], dataFolder);
+        dataFolder = pwd;
     end
     
     convertToDatabaseBF(dataFolder)
