@@ -47,8 +47,9 @@ elseif contains(action, 'convert', 'IgnoreCase', true)
         fprintf(['Cannot find folder %s, looking for .mat files in ',...
             ' reprocessedResults \n'], dataFolder);
         dataFolder = 'reprocessedResults';
+    end
         
-    elseif exist(dataFolder, 'dir') ~= 7
+    if exist(dataFolder, 'dir') ~= 7
         fprintf(['Cannot find folder %s, looking for .mat files in ',...
             ' current folder \n'], dataFolder);
         dataFolder = pwd;
