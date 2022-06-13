@@ -40,12 +40,14 @@ while length(dataFiles) >= 1
             k=1;
             jj = [];
             for j=1:length(dataFiles)
+                
+                % Create set of filepaths and add original first
+                if k == 1
+                    filePaths{1} = filePath;
+                end
+                    
                 if contains(dataFiles(j).name, nameBase)
                     
-                    % Create set of filepaths and add original first
-                    if k == 1
-                        filePaths{1} = filePath;
-                    end
                     k=k+1;
                     
                     % Add new file to set and put on remove list 
