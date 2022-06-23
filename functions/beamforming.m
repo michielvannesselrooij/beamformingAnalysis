@@ -11,7 +11,7 @@ function spectra = beamforming(dataFiles, conditions, setup)
 % conditions.M_eff              Effective Mach number
 %
 % Optional
-% setup.fRange                  double or 2x1       Frequency range
+% setup.fRange                  2x1                 Frequency range
 % setup.brokenMics              1D                  Broken mic indices
 % setup.overlap                 double              Data overlap (0<->1)
 % setup.scanPlaneResolution     double              Resolution [m]
@@ -222,13 +222,11 @@ end
 fprintf('Extracting data...\n');
 
 % Generate frequency bands
-if length(fRange) == 1
-    f_cen   = 10.^(fRange./10);
-    f_upper = 2^(1/6).*f_cen;
-    f_lower = f_upper./2^(1/3);
-else
+if numel(fRange) == 2
     f_lower = fRange(1);
     f_upper = fRange(2);
+else
+    error('Expected 2 values in frequency range');
 end
 
 % Microphones and data preparation
@@ -258,7 +256,7 @@ f_chunk  = (0:chunk_length/2-1)*df_chunk;
 % indices of frequency to be taken from fft of small chunks
 ind_f_lower = floor(f_lower.*chunk_length./fs + 1);
 ind_f_upper = floor(f_upper.*chunk_length./fs + 1);
-data_chunk  = zeros(chunk_length,nMics,size(usable_signal,2));
+data_chunk  = zeros(chunk_length, nMics, size(usable_signal,2));
 
 for k = 1:size(usable_signal,2)
     data_chunk(:,:,k) = data(usable_signal(1,k):usable_signal(2,k),:)...
