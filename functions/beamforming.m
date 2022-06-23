@@ -230,40 +230,39 @@ micPos(:,removeMics)    = [];
 nMics = length(micPos);
 
 % Windowing
-ind_start_chunk         = 1;
-chunk_length            = floor( timeChunk*fs );
-overlap_chunk_length    = floor( overlap*chunk_length );
-array_us                = ind_start_chunk :  chunk_length-overlap_chunk_length : size(data,1)-overlap_chunk_length;
-usable_signal           = [ array_us(1:end-1); array_us(1:end-1)+chunk_length-1 ];
+chunkLength        = floor( timeChunk*fs );
+chunkOverlapLength = floor( overlap*chunkLength );
+chunkStartIdx      = 1 :  chunkLength-chunkOverlapLength : size(data,1)-chunkOverlapLength;
+usable_signal      = [ chunkStartIdx(1:end-1); chunkStartIdx(1:end-1)+chunkLength-1 ];
    
 %% Develop CSM
 fprintf('Developing CSM...\n');
 
 % f axis for small chunks
-df_chunk = fs/chunk_length;
-f_chunk  = (0:chunk_length/2-1)*df_chunk;
+df_chunk = fs/chunkLength;
+f_chunk  = (0:chunkLength/2-1)*df_chunk;
 
 % indices of frequency to be taken from fft of small chunks
-ind_f_lower = floor(fRange(1).*chunk_length./fs + 1);
-ind_f_upper = floor(fRange(2).*chunk_length./fs + 1);
-data_chunk  = zeros(chunk_length, nMics, size(usable_signal,2));
+ind_f_lower = floor(fRange(1).*chunkLength./fs + 1);
+ind_f_upper = floor(fRange(2).*chunkLength./fs + 1);
+data_chunk  = zeros(chunkLength, nMics, size(usable_signal,2));
 
 for k = 1:size(usable_signal,2)
     data_chunk(:,:,k) = data(usable_signal(1,k):usable_signal(2,k),:)...
-                        - repmat(mean(data(usable_signal(1,k):usable_signal(2,k),:),1),chunk_length,1);
+                        - repmat(mean(data(usable_signal(1,k):usable_signal(2,k),:),1),chunkLength,1);
 end
 
-win_hann        = repmat(hann(chunk_length),[1,size(data,2),size(usable_signal,2)]);
+win_hann        = repmat(hann(chunkLength),[1,size(data,2),size(usable_signal,2)]);
 data_chunk_hann = data_chunk.*win_hann;
     
 % With Hanning window + overall sound pressure level (dB)
 X_chunk_hann              = fft(data_chunk_hann);
-X_chunk_hann              = X_chunk_hann(1:length(f_chunk),:,:)/(sqrt(sum(hann(chunk_length).^2)));
+X_chunk_hann              = X_chunk_hann(1:length(f_chunk),:,:)/(sqrt(sum(hann(chunkLength).^2)));
 X_chunk_hann(2:end-1,:,:) = sqrt(2)*X_chunk_hann(2:end-1,:,:);
 X_chunk_hann_collect      = X_chunk_hann;
 
 % Averaging chunks
-X_chunk_ff = permute(sqrt(1/(chunk_length*df_chunk)).*X_chunk_hann_collect(ind_f_lower:ind_f_upper,:,:),[2,3,1]);
+X_chunk_ff = permute(sqrt(1/(chunkLength*df_chunk)).*X_chunk_hann_collect(ind_f_lower:ind_f_upper,:,:),[2,3,1]);
 f = f_chunk(ind_f_lower:ind_f_upper);
 
 C_av=zeros(nMics^2,ind_f_upper-ind_f_lower+1);
