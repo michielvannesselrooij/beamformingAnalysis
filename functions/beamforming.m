@@ -294,7 +294,7 @@ end
 Cavg = reshape(Cavg0, [nMics, nMics, fUpperIdx-fLowerIdx+1]);
 
 % Diagonal removal
-if diagonalRemoval == 1
+if diagonalRemoval
     for i = 1:size(Cavg,3)
         Cavg(:,:,i) = Cavg(:,:,i) - diag(diag(Cavg(:,:,i)));
     end
