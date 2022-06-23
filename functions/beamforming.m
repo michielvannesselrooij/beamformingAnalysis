@@ -231,7 +231,7 @@ micPos(3,:)          = 0;
 micPos(:,removeMics) = [];
 nMics                = length(micPos);
 
-% Windowing
+% Prepare data chunks
 chunkLength        = floor( timeChunk*fs );
 chunkOverlapLength = floor( overlap*chunkLength );
 chunkStartIdx      = 1 :  chunkLength-chunkOverlapLength : size(data,1)-chunkOverlapLength;
@@ -240,58 +240,69 @@ chunks             = [ chunkStartIdx(1:end-1); chunkStartIdx(1:end-1)+chunkLengt
 %% Develop CSM
 fprintf('Developing CSM...\n');
 
-% f axis for small chunks
-df_chunk = fs/chunkLength;
-f_chunk  = (0:chunkLength/2-1)*df_chunk;
-
-% indices of frequency to be taken from fft of small chunks
-ind_f_lower = floor(fRange(1).*chunkLength./fs + 1);
-ind_f_upper = floor(fRange(2).*chunkLength./fs + 1);
-data_chunk  = zeros(chunkLength, nMics, size(chunks,2));
-
+% Create data chunks
+dataChunk = zeros(chunkLength, nMics, size(chunks,2));
 for k = 1:size(chunks,2)
-    data_chunk(:,:,k) = data(chunks(1,k):chunks(2,k),:)...
-                        - repmat(mean(data(chunks(1,k):chunks(2,k),:),1),chunkLength,1);
-end
-
-win_hann        = repmat(hann(chunkLength),[1,size(data,2),size(chunks,2)]);
-data_chunk_hann = data_chunk.*win_hann;
+   
+    chunkStart = chunks(1,k);
+    chunkEnd   = chunks(2,k);
     
-% With Hanning window + overall sound pressure level (dB)
-X_chunk_hann              = fft(data_chunk_hann);
-X_chunk_hann              = X_chunk_hann(1:length(f_chunk),:,:)/(sqrt(sum(hann(chunkLength).^2)));
-X_chunk_hann(2:end-1,:,:) = sqrt(2)*X_chunk_hann(2:end-1,:,:);
-X_chunk_hann_collect      = X_chunk_hann;
-
-% Averaging chunks
-X_chunk_ff = permute(sqrt(1/(chunkLength*df_chunk)).*X_chunk_hann_collect(ind_f_lower:ind_f_upper,:,:),[2,3,1]);
-f = f_chunk(ind_f_lower:ind_f_upper);
-
-C_av=zeros(nMics^2,ind_f_upper-ind_f_lower+1);
-
-for j = 1:size(X_chunk_ff,3)
-    CC=rectpulse(conj(X_chunk_ff(:,:,j)),size(X_chunk_ff,1)).*repmat(X_chunk_ff(:,:,j),[size(X_chunk_ff,1),1]);
-    C_av(:,j)=mean(real(CC)-1i*imag(CC),2);
+    dataSelect = data(chunkStart:chunkEnd, :);
+    
+    dataChunk(:,:,k) = dataSelect - repmat(mean(dataSelect, 1), chunkLength, 1);
+    
 end
 
-C_averaged=reshape(C_av,[nMics,nMics,ind_f_upper-ind_f_lower+1]);
+% Frequencies for data chunks
+dfChunk = fs/chunkLength;
+fChunk  = (0:chunkLength/2-1)*dfChunk;
 
+% Indices of frequency to be taken from fft of data chunks
+fLowerIdx = floor(fRange(1).*chunkLength./fs + 1);
+fUpperIdx = floor(fRange(2).*chunkLength./fs + 1);
+f         = fChunk(fLowerIdx:fUpperIdx);
+
+% Hanning window + overall sound pressure level (dB)
+winHann       = repmat(hann(chunkLength), [1, size(data,2), size(chunks,2)]);
+dataChunkHann = dataChunk .* winHann;
+    
+xChunkHann              = fft(dataChunkHann);
+xChunkHann              = xChunkHann(1:length(fChunk),:,:)/(sqrt(sum(hann(chunkLength).^2)));
+xChunkHann(2:end-1,:,:) = sqrt(2)*xChunkHann(2:end-1,:,:);
+xChunkHannCollect       = xChunkHann;
+
+xChunkff = permute(...
+                sqrt(1/(chunkLength*dfChunk)) .* xChunkHannCollect(fLowerIdx:fUpperIdx,:,:), ...
+                [2,3,1]);
+       
+% Average chunks
+Cavg0 = zeros(nMics^2, fUpperIdx-fLowerIdx+1);
+for j = 1:size(xChunkff,3)
+    CC = rectpulse(conj(xChunkff(:,:,j)), size(xChunkff,1)) ...
+                    .* repmat(xChunkff(:,:,j), [size(xChunkff,1),1]);
+                
+    Cavg0(:,j) = mean(real(CC) - 1i*imag(CC), 2);
+end
+
+Cavg = reshape(Cavg0, [nMics, nMics, fUpperIdx-fLowerIdx+1]);
+
+% Diagonal removal
 if diagonalRemoval == 1
-    for i = 1:size(C_averaged,3)
-        C_averaged(:,:,i) = C_averaged(:,:,i) - diag(diag(C_averaged(:,:,i)));
+    for i = 1:size(Cavg,3)
+        Cavg(:,:,i) = Cavg(:,:,i) - diag(diag(Cavg(:,:,i)));
     end
 end
 
-C_averaged = C_averaged.*df_chunk;
+Cavg = Cavg.*dfChunk;
 
 %% Build scan plane
 
-x_steps = scanPlaneLimits(1) : scanPlaneResolution : scanPlaneLimits(2);
-y_steps = scanPlaneLimits(3) : scanPlaneResolution : scanPlaneLimits(4);
+dx = scanPlaneLimits(1) : scanPlaneResolution : scanPlaneLimits(2);
+dy = scanPlaneLimits(3) : scanPlaneResolution : scanPlaneLimits(4);
 
-scan_plane_x = repmat(x_steps,length(y_steps),1); 
-scan_plane_y = repmat(flipud(y_steps'),1,length(x_steps));
-scan_plane_z = h.*ones(size(scan_plane_x));
+scanX = repmat(dx, length(dy), 1); 
+scanY = repmat(flipud(dy'), 1, length(dx));
+scanZ = h .* ones(size(scanX));
 
 %% Beamforming
 fprintf('Calculating radii...\n');
@@ -299,73 +310,75 @@ fprintf('Calculating radii...\n');
 if flowCorrectedSteeringVector == 1
     
     % Steering vector for flow correction
-    M_vec           = M_eff .* flowVector;
-    beta_square     = 1-M_eff^2;
-    psi_j_vec       = [scan_plane_x(:), scan_plane_y(:), -scan_plane_z(:)];
-    x_n_vec         = micPos';
-    r_vec           = repmat(x_n_vec, size(psi_j_vec, 1), 1) - rectpulse(psi_j_vec, size(x_n_vec, 1));
-    radii0          = sqrt(sum(r_vec.^2, 2));
+    Mvec      = M_eff .* flowVector;
+    beta2     = 1-M_eff^2;
+    scanPlane = [scanX(:), scanY(:), -scanZ(:)];
+    rvec      = repmat(micPos', size(scanPlane, 1), 1) - rectpulse(scanPlane, nMics);
+    radii0    = sqrt(sum(rvec.^2, 2));
     
-    M_vec_mat       = repmat(M_vec,size(r_vec,1),1);
-    delt_all_m      = (-dot(M_vec_mat,r_vec,2) + sqrt((dot(M_vec_mat,r_vec,2)).^2 + beta_square*radii0.^2)) ./ (c*beta_square);
-    delt_all        = permute(reshape(delt_all_m, [nMics,size(scan_plane_x)]), [2,3,1]);
-    radii           = permute(reshape(radii0, [nMics, size(scan_plane_x)]), [2,3,1]);
+    Mvec2     = repmat(Mvec, size(rvec,1), 1);
+    deltAllM  = (-dot(Mvec2, rvec, 2) + sqrt((dot(Mvec2, rvec, 2)).^2 + beta2*radii0.^2)) ...
+                ./ (c*beta2);
+                
+    deltAll   = permute(reshape(deltAllM, [nMics,size(scanX)]), [2,3,1]);
+    radii     = permute(reshape(radii0,   [nMics, size(scanX)]), [2,3,1]);
 
 else
     
     % Basic steering vector, ignore the flow
-    radii = sqrt((repmat(scan_plane_x,[1,1,nMics]) - repmat(reshape(micPos(1,:),[1,1,nMics]), [size(scan_plane_x),1])).^2 ...
-               + (repmat(scan_plane_y,[1,1,nMics]) - repmat(reshape(micPos(2,:),[1,1,nMics]), [size(scan_plane_y),1])).^2 ...
-               + (repmat(scan_plane_z,[1,1,nMics]) - repmat(reshape(micPos(3,:),[1,1,nMics]), [size(scan_plane_x),1])).^2);
+    radii = sqrt((repmat(scanX,[1,1,nMics]) - repmat(reshape(micPos(1,:),[1,1,nMics]), [size(scanX),1])).^2 ...
+               + (repmat(scanY,[1,1,nMics]) - repmat(reshape(micPos(2,:),[1,1,nMics]), [size(scanY),1])).^2 ...
+               + (repmat(scanZ,[1,1,nMics]) - repmat(reshape(micPos(3,:),[1,1,nMics]), [size(scanX),1])).^2);
 
-    delt_all = radii./c;
+    deltAll = radii./c;
     
 end
 
 radius = repmat(radii, [1,1,1]);
-delt   = repmat(delt_all, [1,1,1]);
+delt   = repmat(deltAll, [1,1,1]);
 
 fprintf('Beamforming...\n');
+bar = waitbar(0, 'CFDBF: Performing beamforming ...');
 
-B_ind  = zeros([numel(scan_plane_x), length(f)]);
-B2_ind = zeros([numel(scan_plane_x), length(f)]); % intermediate map
-bar_bf = waitbar(0, 'CFDBF: Performing beamforming ...');
+B0   = zeros([numel(scanX), length(f)]);
+B0g2 = zeros([numel(scanX), length(f)]); % intermediate map
 
 for f_index = 1:length(f)
     waitbar(f_index/length(f));
     
     g     = ((-exp(-2*pi*1i*f(f_index).*delt)) ./ radius);
-    gsel  = reshape(g, [numel(scan_plane_x), nMics]);
-    C_ind = C_averaged(:, :, f_index);
+    gsel  = reshape(g, [numel(scanX), nMics]);
+    C_ind = Cavg(:, :, f_index);
     
     for s = 1:size(gsel,1)
         Norm1 = norm(conj(gsel(s,:))*C_ind.'*gsel(s,:).');
         gnorm = norm(gsel(s,:));
-        B_ind(s,f_index)  = Norm1/gnorm^4;
-        B2_ind(s,f_index) = Norm1/gnorm^2; % intermediate map
+        B0(s,f_index)  = Norm1/gnorm^4;
+        B0g2(s,f_index) = Norm1/gnorm^2; % intermediate map
     end
 end
 
 % Final map
-B          = reshape(B_ind,  [size(scan_plane_x), length(f)]);
+B          = reshape(B0,  [size(scanX), length(f)]);
 
 % Store intermediate map for diagnostics
-B_g2       = reshape(B2_ind, [size(scan_plane_x), length(f)]);
-B_sum      = sum(B_g2, 3);
-p_ref      = 20e-6;
-scanPlaneB = 20*log10(sqrt(B_sum)/(h*p_ref));
+Bg2       = reshape(B0g2, [size(scanX), length(f)]);
+B_sum      = sum(Bg2, 3);
+
+pref       = 20e-6;
+scanPlaneB = 20*log10(sqrt(B_sum)/(h*pref));
 scanPlaneB = scanPlaneB - max(max(scanPlaneB));
 
 % Finish
-close(bar_bf);
+close(bar);
 
 %% Structure output
 
 spectra.B                  = B;
 spectra.scanPlaneB         = scanPlaneB;
 spectra.f                  = f;
-spectra.scanPlaneX         = scan_plane_x;
-spectra.scanPlaneY         = scan_plane_y;
+spectra.scanPlaneX         = scanX;
+spectra.scanPlaneY         = scanY;
 
 %% Round up
 fprintf('\nDone. It took %0.0f seconds \n\n', toc)
