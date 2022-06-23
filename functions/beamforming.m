@@ -47,10 +47,8 @@ else
     fRange = [500 4000];
 end
 
-if length(fRange) == 2
+if numel(fRange) == 2
     fprintf('Frequency range: %i - %i Hz \n', fRange(1), fRange(2));
-elseif length(fRange) == 1
-    fprintf('Number of frequency bands: %i', fRange)
 else
     error('Number of elements in frequency range "f_select" must be 2');
 end
@@ -208,7 +206,7 @@ for i=1:N
 end
 
 % Filter and sort mics
-data          = dataMic(:,1:nMics);
+data = dataMic(:,1:nMics);
 
 % Sampling frequency [Hz]
 if isfield(setup, 'fs')
@@ -220,14 +218,6 @@ end
 
 %% Environment preparation
 fprintf('Extracting data...\n');
-
-% Generate frequency bands
-if numel(fRange) == 2
-    f_lower = fRange(1);
-    f_upper = fRange(2);
-else
-    error('Expected 2 values in frequency range');
-end
 
 % Microphones and data preparation
 data                    = data(...
@@ -254,8 +244,8 @@ df_chunk = fs/chunk_length;
 f_chunk  = (0:chunk_length/2-1)*df_chunk;
 
 % indices of frequency to be taken from fft of small chunks
-ind_f_lower = floor(f_lower.*chunk_length./fs + 1);
-ind_f_upper = floor(f_upper.*chunk_length./fs + 1);
+ind_f_lower = floor(fRange(1).*chunk_length./fs + 1);
+ind_f_upper = floor(fRange(2).*chunk_length./fs + 1);
 data_chunk  = zeros(chunk_length, nMics, size(usable_signal,2));
 
 for k = 1:size(usable_signal,2)
