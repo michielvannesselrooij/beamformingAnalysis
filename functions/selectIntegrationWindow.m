@@ -37,7 +37,7 @@ if size(micPos,1) < 3
     error('Input micPos should have 3 at least rows (x;y;z)');
 end
 
-if length(f) ~= length(B)
+if length(f) ~= size(B,3)
     error('Inputs B and f should be vectors of the same length');
 end
 

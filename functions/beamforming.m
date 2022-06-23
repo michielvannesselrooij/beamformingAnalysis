@@ -100,8 +100,12 @@ end
 % Indices of mics to be removed
 if isfield(setup, 'brokenMics')
     removeMics = setup.brokenMics;
-    fprintf('Ignoring following mics: \n');
-    disp(removeMics);
+    if ~isempty(removeMics)
+        fprintf('Using all mics \n');
+    else
+        fprintf('Ignoring following mics: \n');
+        disp(removeMics);
+    end
 else
     fprintf('Using all mics \n');
 end
@@ -157,6 +161,9 @@ fprintf('Detailed settings: \n');
     % Portion of data [%] to be used, centered at the half-time
     if isfield(setup, 'dataPortion')
         dataPortion = setup.dataPortion;
+        if dataPortion > 1
+            dataPortion = 1;
+        end
     else
         dataPortion = 1;
     end
@@ -359,10 +366,10 @@ for f_index = 1:length(f)
 end
 
 % Final map
-B          = reshape(B0,  [size(scanX), length(f)]);
+B          = reshape(B0,   [size(scanX), length(f)]);
 
 % Store intermediate map for diagnostics
-Bg2       = reshape(B0g2, [size(scanX), length(f)]);
+Bg2        = reshape(B0g2, [size(scanX), length(f)]);
 B_sum      = sum(Bg2, 3);
 
 pref       = 20e-6;
