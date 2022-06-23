@@ -219,21 +219,23 @@ end
 %% Environment preparation
 fprintf('Extracting data...\n');
 
-% Microphones and data preparation
-data                    = data(...
-                                max(1,round(size(data,1)/2 - (0.5*dataPortion)*size(data,1))) : ...
-                                round(size(data,1)/2       + (0.5*dataPortion)*size(data,1)),...
-                                :);
-data(:,removeMics)      = [];
-micPos(3,:)             = 0;
-micPos(:,removeMics)    = [];
-nMics = length(micPos);
+% Select portion of data to use
+data = data(...
+            max(1,round(size(data,1)/2 - (0.5*dataPortion)*size(data,1))) : ...
+            round(size(data,1)/2       + (0.5*dataPortion)*size(data,1)),...
+            :);
+
+% Prepare mics
+data(:,removeMics)   = [];
+micPos(3,:)          = 0;
+micPos(:,removeMics) = [];
+nMics                = length(micPos);
 
 % Windowing
 chunkLength        = floor( timeChunk*fs );
 chunkOverlapLength = floor( overlap*chunkLength );
 chunkStartIdx      = 1 :  chunkLength-chunkOverlapLength : size(data,1)-chunkOverlapLength;
-usable_signal      = [ chunkStartIdx(1:end-1); chunkStartIdx(1:end-1)+chunkLength-1 ];
+chunks             = [ chunkStartIdx(1:end-1); chunkStartIdx(1:end-1)+chunkLength-1 ];
    
 %% Develop CSM
 fprintf('Developing CSM...\n');
@@ -245,14 +247,14 @@ f_chunk  = (0:chunkLength/2-1)*df_chunk;
 % indices of frequency to be taken from fft of small chunks
 ind_f_lower = floor(fRange(1).*chunkLength./fs + 1);
 ind_f_upper = floor(fRange(2).*chunkLength./fs + 1);
-data_chunk  = zeros(chunkLength, nMics, size(usable_signal,2));
+data_chunk  = zeros(chunkLength, nMics, size(chunks,2));
 
-for k = 1:size(usable_signal,2)
-    data_chunk(:,:,k) = data(usable_signal(1,k):usable_signal(2,k),:)...
-                        - repmat(mean(data(usable_signal(1,k):usable_signal(2,k),:),1),chunkLength,1);
+for k = 1:size(chunks,2)
+    data_chunk(:,:,k) = data(chunks(1,k):chunks(2,k),:)...
+                        - repmat(mean(data(chunks(1,k):chunks(2,k),:),1),chunkLength,1);
 end
 
-win_hann        = repmat(hann(chunkLength),[1,size(data,2),size(usable_signal,2)]);
+win_hann        = repmat(hann(chunkLength),[1,size(data,2),size(chunks,2)]);
 data_chunk_hann = data_chunk.*win_hann;
     
 % With Hanning window + overall sound pressure level (dB)
