@@ -72,19 +72,39 @@ end
     
 
 %% Create figure
+dynRange = 10; % dB
+
 if ~abort
 
     figure;
-
-    % Show beamforming
+    hold on
+    
+    % Prepare contour data
     if diagnostic
-        contourf(scanPlaneX, scanPlaneY, scanPlaneB, 20, 'LineColor', 'none');
+        plotVal = scanPlaneB;
     else
-        contourf(scanPlaneX, scanPlaneY, SPL, 20, 'LineColor', 'none');
+        plotVal = SPL;
     end
+    
+    % Find max level to show
+    if exist('intPlaneX', 'var')
+        idx      = (scanPlaneX >= intPlaneX(1)) &...
+                   (scanPlaneX <= intPlaneX(2)) &...
+                   (scanPlaneY >= intPlaneY(1)) &...
+                   (scanPlaneY <= intPlaneY(2));
+               
+        plotValWithin = plotVal .* repmat(idx, [1,1,size(plotVal,3)]);
+        maxLevel = max(plotValWithin(:));
+    else
+        maxLevel = max(plotVal(:));
+    end
+    minLevel = maxLevel-dynRange;
+    levels = linspace(minLevel, maxLevel, 20);
+    
+    % Show beamforming
+    contourf(scanPlaneX, scanPlaneY, plotVal, levels, 'LineColor', 'none');
 
     % Show geometry (optional)
-    hold on
     if isfield(setup, 'wing')
         af_loc_x = [setup.wing.loc(1), setup.wing.loc(3)];
         af_loc_y = [setup.wing.loc(2), setup.wing.loc(4)];
@@ -94,25 +114,26 @@ if ~abort
 
         plot(x, y, 'w-', 'LineWidth', 3);
     end
-
+    
+    % Show integration window
     if exist('intPlaneX', 'var')
-        % Show integration window
         x = [intPlaneX(1), intPlaneX(1), intPlaneX(2), intPlaneX(2), intPlaneX(1)];
         y = [intPlaneY(1), intPlaneY(2), intPlaneY(2), intPlaneY(1), intPlaneY(1)];
         plot(x, y, 'w--', 'LineWidth', 2);
     end
 
     % Format
+    axis equal
     colormap copper
+    caxis([minLevel, maxLevel]);
+    
     hc = colorbar;
     title(hc, 'dB');
-    axis equal
     xlabel('x [m]');
     ylabel('y [m]');
 
     if diagnostic
         title('Intermediate (g2) map');
-
     elseif exist('f_plot_final', 'var')
         title([num2str(f_plot_final) ' Hz']);
     end
